@@ -201,7 +201,7 @@ const initMap = () => {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     maxZoom: 18,
-    minZoom: 10
+    minZoom: 5
   }).addTo(mapInstance);
 
   markersLayer = L.layerGroup().addTo(mapInstance);
