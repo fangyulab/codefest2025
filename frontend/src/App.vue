@@ -4,9 +4,17 @@
     <main class="flex-1 w-full">
       <div class="max-w-4xl mx-auto px-4 pt-4 pb-24">
         <!-- Tab 1: 發布求助表單 -->
-        <section v-if="activeTab === 0" class="flex flex-col gap-4 space-y-5">
+        <section v-if="activeTab === 0" class="flex flex-col gap-3 space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-3 m-8">
+            <h2 class="text-xl font-semibold text-[#468D9B] flex items-center gap-2">
+              <Icon icon="ant-design:notification-filled" class="size-6" />
+              發出求助訊息
+            </h2>
+          </div>
+          <div class="flex h-px bg-slate-100 m-4"></div>
+
           <div class="grid gap-4">
-            <div class="block text-lg font-semibold text-slate-700 mb-1.5">
+            <div class="text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
               <div class = "flex items-center gap-2">
                 <Icon icon="tabler:sos" class="size-5" />
                 求助標題 *
@@ -14,14 +22,14 @@
               <input
                 type="text"
                 v-model="formData.title"
-                class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
-                        focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
+                class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200
+                        focus:outline-none focus:ring-2 focus:ring-[#93D4DF]
                         placeholder:text-slate-300 transition-all"
                 placeholder="有人跟蹤我"
               />
             </div>
             <div class="grid sm:grid-cols-[2fr,1fr] gap-4">
-              <div class="block text-lg font-semibold text-slate-700 mb-1.5">
+              <div class="text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                 <div class = "flex items-center gap-2">
                   <Icon icon="fluent:location-20-filled" class="size-5" />
                   求助內容
@@ -30,7 +38,7 @@
                   v-model="formData.content"
                   :rows="4"
                   class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
-                          focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
+                          focus:outline-none focus:ring-2 focus:ring-[#93D4DF]
                           placeholder:text-slate-300 transition-all resize-none"
                   placeholder="請清楚說明狀況、時間地點與需要的協助，例如：搬運時間、樓層、有無電梯等"
                 />
@@ -38,7 +46,7 @@
             </div>
 
             <div class="grid sm:grid-cols-[2fr,1fr] gap-4">
-              <div class="block text-lg font-semibold text-slate-700 mb-1.5">
+              <div class="text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                 <div class = "flex items-center gap-2">
                   <Icon icon="fluent:location-20-filled" class="size-5" />
                   定位 *
@@ -47,10 +55,10 @@
                   type="text"
                   v-model="formData.location"
                   class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
-                          focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
+                          focus:outline-none focus:ring-2 focus:ring-[#93D4DF]
                           placeholder:text-slate-300 transition-all" placeholder="例：台北市大安區信義路三段、學校側門附近" />
               </div>
-              <div class="block text-lg font-semibold text-slate-700 mb-1.5">
+              <div class="text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                 <div class = "flex items-center gap-2">
                   <Icon icon="gridicons:phone" class="size-5" />
                   聯絡方式
@@ -59,44 +67,46 @@
                   type="text"
                   v-model="formData.contact"
                   class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
-                          focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
+                          focus:outline-none focus:ring-2 focus:ring-[#93D4DF]
                           placeholder:text-slate-300 transition-all"
                   placeholder="手機、LINE ID 或其他安全聯絡方式"
                 />
               </div>
             </div>
 
-            <div class="block text-lg font-semibold text-slate-700 mb-1.5">
+            <div class=" text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
               <div class="flex items-center gap-2">
                 <Icon icon="si:alert-fill" class="size-5" />
                 緊急程度
               </div>
-              <div class="mt-2 grid grid-cols-3 gap-2 text-[10px]">
-                <button
+
+              <div class="flex flex-row mt-2 text-sm space-y-1.5 justify-around">
+                <div
                   v-for="option in urgencyOptions"
                   :key="option.value"
-                  type="button"
-                  @click="formData.urgency = option.value"
+                  class="flex items-center gap-2 p-2 rounded-xl transition-colors cursor-pointer"
                   :class="[
-                    'flex flex-col items-start justify-center px-2.5 py-2 rounded-2xl border transition-all h-full',
-                    formData.urgency === option.value
-                      ? option.activeClass
-                      : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                    formData.urgency === option.value 
+                      ? 'font-medium' 
+                      : 'text-slate-600 hover:bg-slate-50',
+                    option.value === '1' && formData.urgency === '1' ? 'text-[#D45251]' : '',
+                    option.value === '2' && formData.urgency === '2' ? 'text-[#FD853A]' : '',
+                    option.value === '3' && formData.urgency === '3' ? 'text-[#F5BA4B]' : '',
                   ]"
+                  @click="formData.urgency = option.value"
                 >
-                  <div class="flex items-center gap-1.5 mb-0.5">
-                    <span
-                      class="w-1.5 h-1.5 rounded-full"
-                      :class="option.dotClass"
-                    ></span>
-                    <span class="font-semibold tracking-tight">
-                      {{ option.label }}
-                    </span>
-                  </div>
-                  <p class="text-[9px] leading-snug opacity-80">
-                    {{ option.desc }}
-                  </p>
-                </button>
+                  <input
+                    type="radio"
+                    class="hidden"
+                    name="urgency"
+                    :value="option.value"
+                    v-model="formData.urgency"
+                  />
+                  <span class="inline-block w-2.5 h-2.5 rounded-full border "
+                    :class="formData.urgency === option.value ? 'bg-[#93D4DF] border-[#93D4DF]' : 'border-slate-300'">
+                  </span>
+                  <span>{{ option.label }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -104,11 +114,11 @@
 
           <button
             @click="handleSubmit"
-            class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white py-3
-                    text-sm font-semibold shadow-sm hover:bg-indigo-700 active:scale-[0.99] transition-all"
+            class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#71C5D5] text-white py-3
+                    text-sm font-semibold shadow-sm active:scale-[0.99] transition-all"
           >
-            <Send class="w-4 h-4" />
-            發布求助資訊
+            <Icon icon="streamline:send-email-solid"/>
+            發布
           </button>
           <p class="text-[10px] text-slate-400 leading-relaxed">
             *本平台之所有貼文雖以匿名方式公開顯示，但系統內部仍保留使用者之實名制註冊資料，以確保必要時可追溯來源。
@@ -251,18 +261,6 @@
             </div>
           </transition>
 
-          <!-- 淡入淡出動畫 -->
-          <style>
-            .fade-enter-active,
-            .fade-leave-active {
-              transition: opacity .15s ease
-            }
-
-            .fade-enter-from,
-            .fade-leave-to {
-              opacity: 0
-            }
-          </style>
         </section>
 
         <!-- Tab 3: 地圖定位 -->
@@ -331,31 +329,38 @@
 
     <!-- 底部 Tab 導航 -->
     <nav
-      class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 shadow-[0_-4px_12px_rgba(15,23,42,0.04)]">
-      <div class="max-w-4xl mx-auto flex">
-        <button v-for="(tab, index) in tabs" :key="index" @click="activeTab = index" :class="[
-          'flex-1 py-2.5 sm:py-3 flex flex-col items-center gap-1 text-[10px] sm:text-xs transition-all',
-          activeTab === index
-            ? 'text-indigo-600'
-            : 'text-slate-500 hover:text-slate-800'
-        ]">
-          <div :class="[
-            'w-8 h-8 flex items-center justify-center rounded-2xl border text-xs mb-0.5 transition-all',
-            activeTab === index
-              ? 'bg-indigo-50 border-indigo-200 shadow-sm'
-              : 'bg-slate-50 border-slate-200'
-          ]">
-            <component :is="tab.icon" class="w-4 h-4" />
-          </div>
-          <span class="font-medium tracking-tight">{{ tab.name }}</span>
-        </button>
+      class="fixed bottom-0 left-0 right-0 z-20 flex justify-center pb-4"
+    >
+      <div class="relative w-full max-w-md px-4">
+        <div
+          class="relative m-2 mt-0 mb-1 flex items-center gap-2 rounded-full
+                 bg-[#DBF1F5] px-3 py-2 h-14"
+        >
+          <div
+            class="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-1/3
+                   rounded-full bg-[#71C5D5] shadow-md transition-transform duration-300"
+            :class="translateClass"
+          />
+
+          <button
+            v-for="(tab, index) in tabs"
+            :key="tab.name"
+            @click="activeTab = index"
+            class="relative z-10 flex-1 flex flex-col items-center gap-0.5 py-1"
+          >
+            <Icon
+              :icon="tab.icon"
+              :class="activeTab === index ? 'text-white size-8' : 'text-[#356C77] size-7'"
+            />
+          </button>
+        </div>
       </div>
     </nav>
 
     <!-- Toast -->
     <transition name="fade-up">
       <div v-if="toastMessage"
-        class="fixed bottom-20 left-1/2 -translate-x-1/2 px-4 py-2.5 bg-slate-900/90 text-white text-xs rounded-full shadow-lg z-50">
+        class="fixed bottom-20 left-1/2 -translate-x-1/2 px-4 py-2.5 bg-[#356C77] text-white text-xs rounded-full shadow-lg z-50">
         {{ toastMessage }}
       </div>
     </transition>
@@ -374,6 +379,7 @@ interface HelpRequest {
   contact?: string;
   urgency?: string;
   timestamp: string;
+  distanceKm?: number;
   lat: number;
   lng: number;
 }
@@ -382,6 +388,8 @@ interface UserLocation {
   lat: number;
   lng: number;
 }
+
+const selectedRequest = ref<HelpRequest | null>(null);
 
 const activeTab = ref (0);
 const formData = reactive({
@@ -400,23 +408,45 @@ let toastTimer: number | null = null;
 const urgencyOptions = [
   {
     value: '1',
-    label: '高（需要立即協助）',
+    label: '極度緊急',
     activeClass: 'bg-red-50 text-red-600 border-red-200 shadow-sm',
     dotClass: 'bg-red-500'
   },
   {
     value: '2',
-    label: '中（盡快協助）',
+    label: '高度緊急',
     activeClass: 'bg-orange-50 text-orange-600 border-orange-200 shadow-sm',
     dotClass: 'bg-orange-500'
   },
   {
     value: '3',
-    label: '低（一般關懷）',
+    label: '中度緊急',
     activeClass: 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm',
-    dotClass: 'bg-emerald-500'
+    dotClass: 'bg-yellow-500'
   }
 ];
+
+const openRequest = (req: HelpRequest) => {
+  // 計算距離（如果有 userLocation）
+  let distanceKm: number | undefined = undefined;
+  if (userLocation.value) {
+    distanceKm = calculateDistance(
+      userLocation.value.lat,
+      userLocation.value.lng,
+      req.lat,
+      req.lng
+    );
+  }
+
+  selectedRequest.value = {
+    ...req,
+    distanceKm
+  };
+};
+
+const closeRequest = () => {
+  selectedRequest.value = null;
+};
 
 // 取得使用者位置
 onMounted(() => {
@@ -443,6 +473,18 @@ const showToast = (msg: string) => {
     toastMessage.value = null;
   }, 1800);
 };
+
+const tabs = [
+  { name: '發布求助', icon: 'tabler:sos' },
+  { name: '求助資訊', icon: 'tabler:users' },
+  { name: '地圖定位', icon: 'tabler:map-pin' }
+];
+
+const translateClass = computed(() => {
+  if (activeTab.value === 0) return 'translate-x-0';
+  if (activeTab.value === 1) return 'translate-x-[95%]';
+  return 'translate-x-[190%]';
+});
 
 // 計算兩點之間的距離（公里）
 const calculateDistance = (
@@ -520,12 +562,6 @@ const filteredRequests = computed(() => {
   return helpRequests.value;
 });
 
-// Tabs
-const tabs = [
-  { name: '發布求助', icon: Send },
-  { name: '求助資訊', icon: Users },
-  { name: '地圖定位', icon: Map }
-];
 </script>
 
 <style scoped>
