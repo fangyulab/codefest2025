@@ -5,9 +5,13 @@ import math
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os
+from geo import geo_bp
+
 
 app = Flask(__name__)
 CORS(app)
+
+app.register_blueprint(geo_bp, url_prefix="/api/geo")
 
 cred = credentials.Certificate("key.json")
 firebase_admin.initialize_app(cred)

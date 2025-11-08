@@ -280,9 +280,9 @@
             <div class="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-1/3
                     rounded-full bg-[#71C5D5] shadow-md transition-transform duration-300" :class="translateClass" />
 
-            <button v-for="(tab, index) in tabs" :key="tab.name" @click="activeTab = index"
+            <button v-for="(tab, index) in tabs" :key="tab.name" @click="activeTab.value = index"
               class="relative z-10 flex-1 flex flex-col items-center gap-0.5 py-1">
-              <Icon :icon="tab.icon" :class="activeTab === index ? 'text-white size-8' : 'text-[#356C77] size-7'" />
+              <Icon :icon="tab.icon" :class="activeTab.value === index ? 'text-white size-8' : 'text-[#356C77] size-7'" />
             </button>
           </div>
         </div>
@@ -306,7 +306,9 @@ import { Icon } from '@iconify/vue';
 import MapPage from './pages/MapPage.vue';
 
 // ==================== API 配置 ====================
-const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
+// const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
+const API_BASE_URL = 'http://localhost:8080/api';
+
 const CURRENT_USER_ID = 1; // 寫死的使用者 ID，之後再實作登入功能
 
 // ==================== 型別定義 ====================
@@ -335,6 +337,8 @@ interface UserLocation {
   lng: number;
 }
 
+
+
 // ==================== API 函式 ====================
 const fetchPosts = async () => {
   try {
@@ -355,25 +359,39 @@ const fetchPosts = async () => {
     const data = await response.json();
     
     if (data.success) {
-      helpRequests.value = data.posts.map((post: any) => ({
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        location: post.location,
-        locationText: post.location, // 如果後端有提供地址文字可以用，目前用座標
-        contact: post.contact,
-        urgency: post.urgency,
-        timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
-        latitude: post.latitude,
-        longitude: post.longitude,
-        lat: post.latitude,
-        lng: post.longitude,
-        isMine: post.user_id === CURRENT_USER_ID,
-        resolved: post.resolved,
-        distance: post.distance,
-        distance_text: post.distance_text,
-        helper_count: post.helper_count || 0
-      }));
+      helpRequests.value = await Promise.all(
+      data.posts.map(async (post: any) => {
+        let addressText = post.location;
+        try {
+          if (post.latitude && post.longitude) {
+            addressText = await fetchAddress(post.latitude, post.longitude);
+          }
+        } catch (err) {
+          console.warn("地址轉換失敗:", err);
+        }
+
+        return {
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          location: post.location,
+          locationText: addressText,
+          contact: post.contact,
+          urgency: post.urgency,
+          timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
+          latitude: post.latitude,
+          longitude: post.longitude,
+          lat: post.latitude,
+          lng: post.longitude,
+          isMine: post.user_id === CURRENT_USER_ID,
+          resolved: post.resolved,
+          distance: post.distance,
+          distance_text: post.distance_text,
+          helper_count: post.helper_count || 0
+        };
+      })
+    );
+
     }
   } catch (error) {
     console.error('載入貼文失敗:', error);
@@ -469,7 +487,7 @@ const resolvePost = async (postId: number) => {
 
 // ==================== 狀態管理 ====================
 const selectedRequest = ref<HelpRequest | null>(null);
-const activeTab = ref(0);
+const activeTab = ref(1);
 const formData = reactive({
   title: '',
   content: '',
@@ -516,30 +534,14 @@ const urgencyRank = (value: number): number => {
 
 const openRequest = async (req: HelpRequest) => {
   try {
-    const params = new URLSearchParams();
-    if (userLocation.value) {
-      params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
-    }
-    
-    const response = await fetch(`${API_BASE_URL}/posts/${req.id}?${params}`);
-    const data = await response.json();
-    
-    if (data.success) {
-      selectedRequest.value = {
-        ...data.post,
-        timestamp: new Date(data.post.created_at).toLocaleString('zh-TW'),
-        locationText: data.post.location,
-        lat: data.post.latitude,
-        lng: data.post.longitude,
-        isMine: data.post.user_id === CURRENT_USER_ID
-      };
-      isModalOpen.value = true;
-    }
+    selectedRequest.value = { ...req };
+    isModalOpen.value = true;
   } catch (error) {
     console.error('載入貼文詳情失敗:', error);
     showToast('載入失敗，請稍後再試');
   }
 };
+
 
 const closeRequest = () => {
   selectedRequest.value = null;
@@ -590,6 +592,19 @@ const translateClass = computed(() => {
   if (activeTab.value === 1) return 'translate-x-[95%]';
   return 'translate-x-[190%]';
 });
+
+async function fetchAddress(lat: number, lon: number) {
+  const res = await fetch(`${API_BASE_URL}/geo/reverse-geocode?lat=${lat}&lon=${lon}`)
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || "API error")
+  }
+
+  const data = await res.json()
+  return data.address
+}
+
 
 // 計算兩點之間的距離（公里）
 const calculateDistance = (
