@@ -6,7 +6,8 @@
 
 ## 競品
     - 警政署 110 報案 App (Video 119 App)
-    - Neighbors by Ring (美國)
+    - HKSOS (香港)
+    - Neighbors by Ring 、 Safety Now Community(美國)
         - 功能非常像 (?)
     - ...
 
