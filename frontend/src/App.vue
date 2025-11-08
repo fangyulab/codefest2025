@@ -595,9 +595,10 @@ const createPost = async () => {
       return;
     }
 
+    // 如果使用者沒有手動選擇標籤，就呼叫分類器
     if (!formData.incidentLabels || formData.incidentLabels.length === 0) {
       try {
-        const res = await fetch('/api/classify', {
+        const res = await fetch(`${API_BASE_URL}/classify`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -609,37 +610,26 @@ const createPost = async () => {
         });
 
         const data = await res.json();
+        console.log('分類器回應:', data);
 
         if (res.ok && data.success) {
-          // 假設後端回傳格式 example：
-          // { success: true, label: "harassment", confidence: 0.93, labels: ["harassment"] }
-
-          const autoLabels: string[] = [];
-
-          // 多標籤
-          if (Array.isArray(data.labels) && data.labels.length > 0) {
-            autoLabels.push(...data.labels);
-          }
-
-          // 單一 label
-          if (data.label && !autoLabels.includes(data.label)) {
-            autoLabels.push(data.label);
-          }
-
-          // 如果有拿到結果，就塞進 formData.incidentLabels
-          if (autoLabels.length > 0) {
-            formData.incidentLabels = autoLabels;
+          if (data.category) {
+            formData.incidentLabels = [data.category];
+            console.log('自動標籤已設定:', formData.incidentLabels);
+          } else {
+            console.warn('分類器沒有返回 category');
           }
         } else {
-          console.warn('分類失敗，改用使用者輸入的標籤或空值', data);
+          console.warn('分類失敗:', data);
         }
       } catch (err) {
         console.error('分類 API 錯誤：', err);
-        // 不擋發文流程，只是沒有自動標籤
       }
     }
 
-    // 3️⃣ 發送真正的建立貼文 API
+    console.log('準備發送的標籤:', formData.incidentLabels);
+
+    // 發送建立貼文 API
     const response = await fetch(`${API_BASE_URL}/posts`, {
       method: 'POST',
       headers: {
@@ -653,7 +643,7 @@ const createPost = async () => {
         locationText: formData.locationText,
         urgency: formData.urgency,
         contact: formData.contact.trim(),
-        labels: formData.incidentLabels || []  // 後端 incident label 用這個欄位收
+        labels: formData.incidentLabels || []
       })
     });
 
@@ -662,7 +652,7 @@ const createPost = async () => {
     if (data.success) {
       showToast('求助資訊已發布');
 
-      // 4️⃣ 清空表單
+      // 清空表單
       formData.title = '';
       formData.content = '';
       formData.location = '';
@@ -671,7 +661,6 @@ const createPost = async () => {
       formData.urgency = 0;
       formData.incidentLabels = [];
 
-      // 5️⃣ 重新載入貼文＆切到列表
       await fetchPosts();
       activeTab.value = 1;
     } else {
@@ -684,7 +673,6 @@ const createPost = async () => {
     isSubmitting.value = false;
   }
 };
-
 
 const resolvePost = async (postId: number) => {
   try {
