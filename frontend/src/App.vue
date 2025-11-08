@@ -26,100 +26,88 @@
     <!-- 主內容 -->
     <main class="flex-1 w-full">
       <div class="max-w-4xl mx-auto px-4 pt-4 pb-24">
-        <!-- 提示列（桌面版） -->
-        <div class="hidden sm:flex mb-3 gap-2 text-xs text-slate-500">
-          <span class="px-2 py-1 bg-white border border-slate-200 rounded-full">
-            ✦ 下方切換功能頁籤
-          </span>
-          <span class="px-2 py-1 bg-white border border-slate-200 rounded-full">
-            ✦ 可切換僅看附近 5 公里
-          </span>
-        </div>
-
         <!-- 內容卡片 -->
-        <div class="bg-white/90 backdrop-blur shadow-sm rounded-2xl border border-slate-100 p-5 sm:p-6 transition-all">
-          <!-- Tab 1: 發布求助表單 -->
-          <section v-if="activeTab === 0" class="space-y-5">
-            <div class="flex items-center justify-between gap-3">
-              <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                <Send class="w-5 h-5 text-indigo-500" />
-                發布求助資訊
-              </h2>
-              <span class="px-2 py-1 text-[10px] rounded-full bg-indigo-50 text-indigo-500">
-                一鍵發布 · Demo 版本
-              </span>
+        
+        <!-- Tab 1: 發布求助表單 -->
+        <section v-if="activeTab === 0" class="space-y-5">
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
+              <Send class="w-5 h-5 text-indigo-500" />
+              發布求助資訊
+            </h2>
+          </div>
+
+          <div class="grid gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1.5">求助標題 *</label>
+              <input
+                type="text"
+                v-model="formData.title"
+                class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
+                        focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
+                        placeholder:text-slate-300 transition-all"
+                placeholder="例：需要幫忙搬運家具、找人協助修電腦"
+              />
             </div>
 
-            <div class="grid gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1.5">求助內容 *</label>
+              <textarea
+                v-model="formData.content"
+                :rows="4"
+                class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
+                        focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
+                        placeholder:text-slate-300 transition-all resize-none"
+                placeholder="請清楚說明狀況、時間地點與需要的協助，例如：搬運時間、樓層、有無電梯等"
+              />
+            </div>
+
+            <div class="grid sm:grid-cols-[2fr,1fr] gap-4">
               <div>
-                <label class="block text-xs font-medium text-slate-700 mb-1.5">求助標題 *</label>
+                <label class="block text-xs font-medium text-slate-700 mb-1.5 flex items-center gap-1">
+                  <MapPin class="w-3 h-3 text-indigo-500" />
+                  定位地點 *
+                </label>
                 <input
                   type="text"
-                  v-model="formData.title"
+                  v-model="formData.location"
                   class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
-                         focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
-                         placeholder:text-slate-300 transition-all"
-                  placeholder="例：需要幫忙搬運家具、找人協助修電腦"
+                          focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
+                          placeholder:text-slate-300 transition-all"
+                  placeholder="例：台北市大安區信義路三段、學校側門附近"
                 />
               </div>
-
               <div>
-                <label class="block text-xs font-medium text-slate-700 mb-1.5">求助內容 *</label>
-                <textarea
-                  v-model="formData.content"
-                  :rows="4"
+                <label class="block text-xs font-medium text-slate-700 mb-1.5">聯絡方式（選填）</label>
+                <input
+                  type="text"
+                  v-model="formData.contact"
                   class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
-                         focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
-                         placeholder:text-slate-300 transition-all resize-none"
-                  placeholder="請清楚說明狀況、時間地點與需要的協助，例如：搬運時間、樓層、有無電梯等"
+                          focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
+                          placeholder:text-slate-300 transition-all"
+                  placeholder="手機、LINE ID 或其他安全聯絡方式"
                 />
-              </div>
-
-              <div class="grid sm:grid-cols-[2fr,1fr] gap-4">
-                <div>
-                  <label class="block text-xs font-medium text-slate-700 mb-1.5 flex items-center gap-1">
-                    <MapPin class="w-3 h-3 text-indigo-500" />
-                    定位地點 *
-                  </label>
-                  <input
-                    type="text"
-                    v-model="formData.location"
-                    class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
-                           focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
-                           placeholder:text-slate-300 transition-all"
-                    placeholder="例：台北市大安區信義路三段、學校側門附近"
-                  />
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-slate-700 mb-1.5">聯絡方式（選填）</label>
-                  <input
-                    type="text"
-                    v-model="formData.contact"
-                    class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
-                           focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
-                           placeholder:text-slate-300 transition-all"
-                    placeholder="手機、LINE ID 或其他安全聯絡方式"
-                  />
-                </div>
               </div>
             </div>
+          </div>
 
-            <button
-              @click="handleSubmit"
-              class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white py-3
-                     text-sm font-semibold shadow-sm hover:bg-indigo-700 active:scale-[0.99] transition-all"
-            >
-              <Send class="w-4 h-4" />
-              立即發布求助資訊
-            </button>
+          <button
+            @click="handleSubmit"
+            class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white py-3
+                    text-sm font-semibold shadow-sm hover:bg-indigo-700 active:scale-[0.99] transition-all"
+          >
+            <Send class="w-4 h-4" />
+            立即發布求助資訊
+          </button>
 
-            <p class="text-[10px] text-slate-400 leading-relaxed">
-              請避免張貼身分證號、完整家庭地址等敏感資料。此介面為示意版，資料僅暫存於本機。
-            </p>
-          </section>
+          <p class="text-[10px] text-slate-400 leading-relaxed">
+            請避免張貼身分證號、完整家庭地址等敏感資料。此介面為示意版，資料僅暫存於本機。
+          </p>
+        </section>
 
           <!-- Tab 2: 求助資訊列表 -->
-          <section v-else-if="activeTab === 1" class="space-y-4">
+        <section v-else-if="activeTab === 1" class="space-y-4">
+          <div class="bg-white/90 backdrop-blur shadow-sm rounded-2xl border border-slate-100 p-5 sm:p-6 transition-all">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
                 <Users class="w-5 h-5 text-indigo-500" />
@@ -182,10 +170,12 @@
                 </div>
               </article>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <!-- Tab 3: 地圖定位 -->
-          <section v-else-if="activeTab === 2" class="space-y-4">
+        <!-- Tab 3: 地圖定位 -->
+        <section v-else-if="activeTab === 2" class="space-y-4">
+          <div class="bg-white/90 backdrop-blur shadow-sm rounded-2xl border border-slate-100 p-5 sm:p-6 transition-all">
             <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
               <Map class="w-5 h-5 text-indigo-500" />
               地圖定位與距離
@@ -244,8 +234,8 @@
                 </p>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
       </div>
     </main>
 
