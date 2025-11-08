@@ -115,11 +115,11 @@
               </div>
             </div>
 
-            <div class="h-2"></div>
+            <div class="h-1"></div>
 
             <button @click="handleSubmit" :disabled="isSubmitting"
-              class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#71C5D5] text-white py-3
-                      text-sm font-semibold shadow-sm active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              class="mt-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#71C5D5] text-white py-2 px-8
+                      text-xs font-semibold shadow-sm active:scale-[0.99] transition-all">
               <Icon icon="streamline:send-email-solid" />
               {{ isSubmitting ? '發布中...' : '發布' }}
             </button>
@@ -145,7 +145,7 @@
                     : 'bg-[#71C5D5] text-white'
                 ]">
                   <Icon icon="fluent:location-20-filled" class="size-3" />
-                  {{ showNearby ? '顯示附近 5 公里' : '顯示所有求助' }}
+                  {{ showNearby ? '顯示附近 1 公里' : '顯示所有求助' }}
                 </button>
               </div>
             </div>
@@ -193,31 +193,35 @@
             </transition>
 
             <!-- 載入中 -->
-            <div v-if="isLoading" class="text-center py-10 px-6 text-slate-400">
-              <Icon icon="svg-spinners:ring-resize" class="mx-auto mb-4 w-12 h-12" />
-              <p class="text-base">載入中...</p>
+            <div v-if="isLoading" class="flex flex-col text-center items-center justify-center py-10 px-6 text-slate-400 gap-2">
+              <Icon icon="svg-spinners:ring-resize" class="mx-auto mb-4 size-4" />
+              <p class="text-xs">載入中...</p>
             </div>
 
             <!-- 無資料時 -->
             <div v-else-if="filteredRequests.length === 0" class="text-center py-10 px-6 text-slate-400">
-              <Users class="mx-auto mb-4 w-12 h-12 opacity-40" />
-              <p class="text-base">目前尚無求助資訊</p>
-              <p class="text-[10px] mt-1">前往「發布求助」頁籤建立第一筆需求 🌱</p>
+              <p class="text-xs">目前尚無求助資訊</p>
             </div>
 
             <!-- 列表 -->
             <div v-else class="flex flex-col gap-3 px-4">
               <article v-for="req in filteredRequests" :key="req.id" :class="[
-                'rounded-3xl px-5 py-4 border transition-all cursor-pointer leading-relaxed flex flex-col gap-1',
+                'rounded-xl px-4 py-2 transition-all cursor-pointer leading-relaxed flex flex-col gap-1',
                 req.isMine
-                  ? 'bg-white border-[#B4E2EA] border-[1.5px]'
+                  ? 'bg-white border-[#71C5D5] border-1'
                   : 'bg-[#DBF1F5] border-none'
               ]" @click="openRequest(req)" @keydown.enter.prevent="openRequest(req)" role="button" tabindex="0">
                 <!-- 標題 -->
-                <h3 class="font-semibold text-sm text-slate-900 mb-3">
-                  {{ req.title }}
-                </h3>
-
+                <div class="flex flex-row justify-between items-center">
+                  <h3 class="font-semibold text-sm text-slate-900 mb-3">
+                    {{ req.title }}
+                  </h3>
+                  <div class="flex flex-row gap-1">
+                    <div v-for="tag in req.labels" class="px-2 py-0.5 rounded-full border text-[10px] flex-shrink-0 transition-all whitespace-nowrap border-[#71C5D5] text-[#71C5D5]">
+                      {{ tag }}
+                    </div>
+                  </div>
+                </div>
                 <!-- 地點與發佈時間 -->
                 <div class="flex flex-col text-[10px] text-slate-500">
                   <div class="flex items-center gap-1">
@@ -496,7 +500,7 @@ const fetchPosts = async () => {
 
 
     if (showNearby.value) {
-      params.append('distance', '5');
+      params.append('distance', '1');
     }
 
     const response = await fetch(`${API_BASE_URL}/posts?${params}`);
@@ -593,6 +597,14 @@ const createPost = async () => {
       showToast('無法取得您的位置，請確認已允許定位');
       isSubmitting.value = false;
       return;
+    }
+
+    if(!formData.content){
+      formData.content= ' ';
+    }
+
+    if(!formData.urgency){
+      formData.urgency= 1;
     }
 
     // 如果使用者沒有手動選擇標籤，就呼叫分類器
@@ -934,17 +946,13 @@ const calculateDistance = (
 
 // 發布求助
 const handleSubmit = async () => {
-  if (!formData.title || !formData.content || !formData.contact) {
+  if (!formData.title || (!formData.locationText) ) {
     showToast('請填寫所有必填欄位');
     return;
   }
 
-  if (!formData.urgency) {
-    showToast('請選擇緊急程度');
-    return;
-  }
-
   await createPost();
+  fetchPosts();
 };
 
 // 切換附近 5 公里
@@ -952,29 +960,44 @@ const toggleNearby = () => {
   showNearby.value = !showNearby.value;
 };
 
-// 監聽 showNearby 變化，重新載入貼文
-watch(showNearby, () => {
-  fetchPosts();
-});
+// // 監聽 showNearby 變化，重新載入貼文
+// watch(showNearby, () => {
+//   fetchPosts();
+// });
 
-// 監聽 activeTab 變化，切換到列表頁時重新載入
-watch(activeTab, (newTab) => {
-  if (newTab === 1) {
-    fetchPosts();
+// // 監聽 activeTab 變化，切換到列表頁時重新載入
+// watch(activeTab, (newTab) => {
+//   if (newTab === 1) {
+//     fetchPosts();
+//   }
+// });
+
+const getDistanceScore = (req: HelpRequest): number => {
+  // 沒有使用者位置或沒有座標 → 排到最後
+  if (!userLocation.value || req.lat == null || req.lng == null) {
+    return Number.POSITIVE_INFINITY;
   }
-});
+
+  return calculateDistance(
+    userLocation.value.lat,
+    userLocation.value.lng,
+    req.lat,
+    req.lng
+  );
+};
+
 
 const filteredRequests = computed(() => {
   let list = helpRequests.value;
 
-  // 行政區篩選：看 locationText 有沒有包含選取的字
+  // 行政區篩選
   if (selectedDistrict.value !== 'all') {
     list = list.filter(req =>
       req.locationText?.includes(selectedDistrict.value)
     );
   }
 
-  // 事件篩選：優先用 labels，比對不到再 fallback 到 標題 / 內容
+  // 事件篩選
   if (selectedIncident.value !== 'all') {
     list = list.filter(req =>
       (req.labels && req.labels.includes(selectedIncident.value)) ||
@@ -983,8 +1006,26 @@ const filteredRequests = computed(() => {
     );
   }
 
-  return list;
+  // 排序：距離 → urgency(1 最優先) → 時間(新到舊)
+  return [...list].sort((a, b) => {
+    // 距離（用 calculateDistance 算；缺少資訊的排最後）
+    const distA = getDistanceScore(a);
+    const distB = getDistanceScore(b);
+    if (distA !== distB) return distA - distB;
+
+    // 緊急程度（數字小優先：1 → 2 → 3）
+    const urgA = a.urgency ?? Number.POSITIVE_INFINITY;
+    const urgB = b.urgency ?? Number.POSITIVE_INFINITY;
+    if (urgA !== urgB) return urgA - urgB;
+
+    // 時間（新到舊；timestamp 是 toLocaleString 後的字串，所以這邊用 Date parse）
+    const timeA = new Date(a.timestamp).getTime();
+    const timeB = new Date(b.timestamp).getTime();
+    return timeB - timeA;
+  });
 });
+
+
 
 
 const markAsResolved = async (id: number) => {
