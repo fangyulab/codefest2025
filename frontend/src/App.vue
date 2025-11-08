@@ -1,3 +1,4 @@
+<!-- App.vue -->
 <template>
   <div class="w-full h-screen text-slate-900 flex flex-col  items-center">
     <div class="max-w-2xl w-screen bg-gray-50 h-full">
@@ -72,9 +73,9 @@
                       formData.urgency === option.value
                         ? 'font-medium'
                         : 'text-slate-600 hover:bg-slate-50',
-                      option.value === '1' && formData.urgency === '1' ? 'text-[#D45251]' : '',
-                      option.value === '2' && formData.urgency === '2' ? 'text-[#FD853A]' : '',
-                      option.value === '3' && formData.urgency === '3' ? 'text-[#F5BA4B]' : '',
+                      option.value === 1 && formData.urgency === 1 ? 'text-[#D45251]' : '',
+                      option.value === 2 && formData.urgency === 2 ? 'text-[#FD853A]' : '',
+                      option.value === 3 && formData.urgency === 3 ? 'text-[#F5BA4B]' : '',
                     ]" @click="formData.urgency = option.value">
                     <input type="radio" class="hidden" name="urgency" :value="option.value"
                       v-model="formData.urgency" />
@@ -88,10 +89,10 @@
             </div>
 
 
-            <button @click="handleSubmit" class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#71C5D5] text-white py-3
-                      text-sm font-semibold shadow-sm active:scale-[0.99] transition-all">
+            <button @click="handleSubmit" :disabled="isSubmitting" class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#71C5D5] text-white py-3
+                      text-sm font-semibold shadow-sm active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               <Icon icon="streamline:send-email-solid" />
-              發布
+              {{ isSubmitting ? '發布中...' : '發布' }}
             </button>
             <p class="text-[10px] text-slate-400 leading-relaxed">
               *本平台之所有貼文雖以匿名方式公開顯示，但系統內部仍保留使用者之實名制註冊資料，以確保必要時可追溯來源。
@@ -123,8 +124,14 @@
             <!-- 頁首分隔線，讓標題與列表之間有更明顯的區隔 -->
             <div class="flex h-px bg-slate-100 m-4"></div>
 
+            <!-- 載入中 -->
+            <div v-if="isLoading" class="text-center py-10 px-6 text-slate-400">
+              <Icon icon="svg-spinners:ring-resize" class="mx-auto mb-4 w-12 h-12" />
+              <p class="text-base">載入中...</p>
+            </div>
+
             <!-- 無資料時 -->
-            <div v-if="filteredRequests.length === 0" class="text-center py-10 px-6 text-slate-400">
+            <div v-else-if="filteredRequests.length === 0" class="text-center py-10 px-6 text-slate-400">
               <Users class="mx-auto mb-4 w-12 h-12 opacity-40" />
               <p class="text-base">目前尚無求助資訊</p>
               <p class="text-[10px] mt-1">前往「發布求助」頁籤建立第一筆需求 🌱</p>
@@ -148,11 +155,11 @@
                   <div class="flex items-center gap-1">
                     <Icon icon="fluent:location-20-filled"
                       class="size-4"
-                      :class="[req.urgency === '1' ? 'text-[#D45251]' : '',
-                      req.urgency === '2' ? 'text-[#FD853A]' : '',
-                      req.urgency === '3' ? 'text-[#F5BA4B]' : '']" 
+                      :class="[req.urgency === 1 ? 'text-[#D45251]' : '',
+                      req.urgency === 2 ? 'text-[#FD853A]' : '',
+                      req.urgency === 3 ? 'text-[#F5BA4B]' : '']" 
                     />
-                    <span>{{ req.location }}</span>
+                    <span>{{ req.locationText }}</span>
                   </div>
                   <div class="text-[9px] text-slate-400 mt-0.5">
                     {{ req.timestamp }}
@@ -205,31 +212,22 @@
                 <div class="flex items-start gap-2">
                   <Icon icon="fluent:location-20-filled"
                       class="size-4"
-                      :class="[selectedRequest.urgency === '1' ? 'text-[#D45251]' : '',
-                      selectedRequest.urgency === '2' ? 'text-[#FD853A]' : '',
-                      selectedRequest.urgency === '3' ? 'text-[#F5BA4B]' : '']" 
+                      :class="[selectedRequest.urgency === 1 ? 'text-[#D45251]' : '',
+                      selectedRequest.urgency === 2 ? 'text-[#FD853A]' : '',
+                      selectedRequest.urgency === 3 ? 'text-[#F5BA4B]' : '']" 
                     />
                   <div class="leading-relaxed">
                     <span class="font-medium text-slate-800">地點：</span>
                     <span class="text-slate-700">
-                      {{ selectedRequest.location }}
+                      {{ selectedRequest.locationText }}
                     </span>
                   </div>
                 </div>
 
-                <div v-if="userLocation" class="flex items-center gap-2 pl-6 text-[11px]">
+                <div v-if="selectedRequest.distance_text" class="flex items-center gap-2 pl-6 text-[11px]">
                   <span
                     class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium">
-                    約
-                    {{
-                      calculateDistance(
-                        userLocation.lat,
-                        userLocation.lng,
-                        selectedRequest.lat,
-                        selectedRequest.lng
-                      ).toFixed(2)
-                    }}
-                    公里內
+                    {{ selectedRequest.distance_text }}
                   </span>
                 </div>
               </section>
@@ -264,9 +262,9 @@
             <!-- ✅ 只有自己的貼文才顯示 -->
             <div v-if="selectedRequest?.isMine"
               class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-white/30 backdrop-blur-sm rounded-b-3xl">
-              <button @click="markAsResolved(selectedRequest.id)"
-                class="w-full py-4 text-sm font-medium text-slate-700 tracking-tight active:scale-[0.99] transition-all rounded-b-3xl">
-                標記為已解決
+              <button @click="markAsResolved(selectedRequest.id)" :disabled="isResolving"
+                class="w-full py-4 text-sm font-medium text-slate-700 tracking-tight active:scale-[0.99] transition-all rounded-b-3xl disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ isResolving ? '處理中...' : '標記為已解決' }}
               </button>
             </div>
           </div>
@@ -302,24 +300,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { MapPin, Users, Map, Send } from 'lucide-vue-next';
 import { Icon } from '@iconify/vue';
 import MapPage from './pages/MapPage.vue';
 
+// ==================== API 配置 ====================
+const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
+const CURRENT_USER_ID = 1; // 寫死的使用者 ID，之後再實作登入功能
+
+// ==================== 型別定義 ====================
 interface HelpRequest {
   id: number;
   title: string;
   content: string;
-  location: string;
-  contact?: string;
-  urgency?: string;
+  location: string; // 後端是 "緯度,經度" 格式
+  locationText?: string; // 前端顯示用的地址文字
+  contact: string;
+  urgency: number; // 後端是 number (1/2/3)
   timestamp: string;
-  distanceKm?: number;
-  lat: number;
-  lng: number;
-  isMine: boolean; // ✅ 新增：是不是我自己發的
-  isResolved: boolean; // ✅ 新增
+  latitude: number;
+  longitude: number;
+  lat: number; // 給地圖用
+  lng: number; // 給地圖用
+  isMine: boolean;
+  resolved: boolean;
+  distance?: number;
+  distance_text?: string;
+  helper_count?: number;
 }
 
 interface UserLocation {
@@ -327,139 +335,215 @@ interface UserLocation {
   lng: number;
 }
 
+// ==================== API 函式 ====================
+const fetchPosts = async () => {
+  try {
+    isLoading.value = true;
+    const params = new URLSearchParams({
+      user_id: String(CURRENT_USER_ID)
+    });
+    
+    if (userLocation.value) {
+      params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
+    }
+    
+    if (showNearby.value) {
+      params.append('distance', '5');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/posts?${params}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      helpRequests.value = data.posts.map((post: any) => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        location: post.location,
+        locationText: post.location, // 如果後端有提供地址文字可以用，目前用座標
+        contact: post.contact,
+        urgency: post.urgency,
+        timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
+        latitude: post.latitude,
+        longitude: post.longitude,
+        lat: post.latitude,
+        lng: post.longitude,
+        isMine: post.user_id === CURRENT_USER_ID,
+        resolved: post.resolved,
+        distance: post.distance,
+        distance_text: post.distance_text,
+        helper_count: post.helper_count || 0
+      }));
+    }
+  } catch (error) {
+    console.error('載入貼文失敗:', error);
+    showToast('載入貼文失敗，請稍後再試');
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const createPost = async () => {
+  try {
+    isSubmitting.value = true;
+    
+    if (!userLocation.value) {
+      showToast('無法取得您的位置，請確認已允許定位');
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user_id: CURRENT_USER_ID,
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        location: `${userLocation.value.lat},${userLocation.value.lng}`,
+        urgency: formData.urgency,
+        contact: formData.contact.trim(),
+        labels: [] // 如果之後需要標籤功能可以加
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      showToast('求助資訊已發布');
+      
+      // 清空表單
+      formData.title = '';
+      formData.content = '';
+      formData.location = '';
+      formData.contact = '';
+      formData.urgency = 0;
+      
+      // 重新載入貼文列表
+      await fetchPosts();
+      
+      // 切換到列表頁
+      activeTab.value = 1;
+    } else {
+      showToast(data.message || '發布失敗，請稍後再試');
+    }
+  } catch (error) {
+    console.error('發布貼文失敗:', error);
+    showToast('發布失敗，請稍後再試');
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const resolvePost = async (postId: number) => {
+  try {
+    isResolving.value = true;
+    
+    const response = await fetch(`${API_BASE_URL}/posts/${postId}/resolve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user_id: CURRENT_USER_ID
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      showToast('貼文已標記為已解決');
+      closeRequest();
+      await fetchPosts();
+    } else {
+      showToast(data.message || '標記失敗，請稍後再試');
+    }
+  } catch (error) {
+    console.error('標記失敗:', error);
+    showToast('標記失敗，請稍後再試');
+  } finally {
+    isResolving.value = false;
+  }
+};
+
+// ==================== 狀態管理 ====================
 const selectedRequest = ref<HelpRequest | null>(null);
-
-
-const formatUrgency = (value?: string) => {
-  switch (value) {
-    case '1':
-      return '極度緊急';
-    case '2':
-      return '高度緊急';
-    case '3':
-      return '中度緊急';
-    default:
-      return '未標記';
-  }
-};
-
-const urgencyPillClass = (value?: string) => {
-  switch (value) {
-    case '1':
-      return 'bg-red-50 text-red-600';
-    case '2':
-      return 'bg-orange-50 text-orange-600';
-    case '3':
-      return 'bg-amber-50 text-amber-600';
-    default:
-      return 'bg-slate-100 text-slate-500';
-  }
-};
-
 const activeTab = ref(0);
 const formData = reactive({
   title: '',
   content: '',
   location: '',
   contact: '',
-  urgency: ''
+  urgency: 0
 });
-//const helpRequests = ref<HelpRequest[]>([]);
 
-const helpRequests = ref<HelpRequest[]>([
-  {
-    id: 1,
-    title: '（範例）鄰居需要幫忙搬東西',
-    content: '幫忙把幾箱物資搬到一樓電梯口，預計 19:00 前完成即可，謝謝。',
-    location: '台北市信義區光復南路附近',
-    contact: 'line：neighbor-help',
-    timestamp: new Date().toLocaleString('zh-TW'),
-    lat: 25.033,
-    lng: 121.5654,
-    urgency: '2',
-    isMine: false, // ✅ 這筆是「別人發的」，等等會變成黃底
-    isResolved: false // ✅ 新增
-  },
-
-
-  {
-    id: 2,
-    title: '（範例）鄰居需要幫忙搬東西',
-    content: '幫忙把幾箱物資搬到一樓電梯口，預計 19:00 前完成即可，謝謝。',
-    location: '台北市信義區光復南路附近',
-    contact: 'line：neighbor-help',
-    timestamp: new Date().toLocaleString('zh-TW'),
-    lat: 25.033,
-    lng: 121.5654,
-    urgency: '3',
-    isMine: false, // ✅ 這筆是「別人發的」，等等會變成黃底
-    isResolved: false // ✅ 新增
-  }
-]);
-
-const showNearby = ref(true);
+const helpRequests = ref<HelpRequest[]>([]);
+const showNearby = ref(false);
 const userLocation = ref<UserLocation | null>(null);
 const toastMessage = ref<string | null>(null);
-let toastTimer: number | null = null;
 const isModalOpen = ref(false);
+const isLoading = ref(false);
+const isSubmitting = ref(false);
+const isResolving = ref(false);
+
+let toastTimer: number | null = null;
 
 const urgencyOptions = [
   {
-    value: '1',
+    value: 1,
     label: '極度緊急',
     activeClass: 'bg-red-50 text-red-600 border-red-200 shadow-sm',
     dotClass: 'bg-[#D45251]'
   },
   {
-    value: '2',
+    value: 2,
     label: '高度緊急',
     activeClass: 'bg-orange-50 text-orange-600 border-orange-200 shadow-sm',
     dotClass: 'bg-[#FD853A]'
   },
   {
-    value: '3',
+    value: 3,
     label: '中度緊急',
     activeClass: 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm',
     dotClass: 'bg-yellow-500'
   }
 ];
 
-const urgencyRank = (value?: string): number => {
-  switch (value) {
-    case '1':
-      return 1; // 極度緊急 → 排最前
-    case '2':
-      return 2; // 高度緊急
-    case '3':
-      return 3; // 中度緊急
-    default:
-      return 4; // 沒填或其他 → 排最後
-  }
+const urgencyRank = (value: number): number => {
+  return value || 4; // 沒填或其他 → 排最後
 };
 
-
-const openRequest = (req: HelpRequest) => {
-  // 計算距離（如果有 userLocation）
-  let distanceKm: number | undefined = undefined;
-  if (userLocation.value) {
-    distanceKm = calculateDistance(
-      userLocation.value.lat,
-      userLocation.value.lng,
-      req.lat,
-      req.lng
-    );
+const openRequest = async (req: HelpRequest) => {
+  try {
+    const params = new URLSearchParams();
+    if (userLocation.value) {
+      params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/posts/${req.id}?${params}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      selectedRequest.value = {
+        ...data.post,
+        timestamp: new Date(data.post.created_at).toLocaleString('zh-TW'),
+        locationText: data.post.location,
+        lat: data.post.latitude,
+        lng: data.post.longitude,
+        isMine: data.post.user_id === CURRENT_USER_ID
+      };
+      isModalOpen.value = true;
+    }
+  } catch (error) {
+    console.error('載入貼文詳情失敗:', error);
+    showToast('載入失敗，請稍後再試');
   }
-
-  selectedRequest.value = {
-    ...req,
-    distanceKm
-  };
-  isModalOpen.value = true; // ✅ 打開彈窗
 };
 
 const closeRequest = () => {
   selectedRequest.value = null;
-  isModalOpen.value = false; // ✅ 關閉彈窗
+  isModalOpen.value = false;
 };
 
 // 取得使用者位置
@@ -471,11 +555,18 @@ onMounted(() => {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
+        // 取得位置後載入貼文
+        fetchPosts();
       },
       () => {
         console.log('無法獲取位置');
+        // 即使沒有位置也載入貼文
+        fetchPosts();
       }
     );
+  } else {
+    // 即使沒有位置也載入貼文
+    fetchPosts();
   }
 });
 
@@ -520,47 +611,18 @@ const calculateDistance = (
 };
 
 // 發布求助
-const handleSubmit = () => {
-  if (!formData.title || !formData.content || !formData.location) {
+const handleSubmit = async () => {
+  if (!formData.title || !formData.content || !formData.contact) {
     showToast('請填寫所有必填欄位');
     return;
   }
+  
+  if (!formData.urgency) {
+    showToast('請選擇緊急程度');
+    return;
+  }
 
-  const lat =
-    userLocation.value?.lat ?? 25.033 + (Math.random() - 0.5) * 0.1;
-  const lng =
-    userLocation.value?.lng ?? 121.5654 + (Math.random() - 0.5) * 0.1;
-
-  const newRequest: HelpRequest = {
-    id: Date.now(),
-    title: formData.title.trim(),
-    content: formData.content.trim(),
-    location: formData.location.trim(),
-    urgency: formData.urgency,
-    contact: formData.contact.trim() || undefined,
-    timestamp: new Date().toLocaleString('zh-TW'),
-    lat,
-    lng,
-    isMine: true, // ✅ 自己送出的永遠標記為「我發的」
-    isResolved: false // ✅ 新增
-  };
-
-  helpRequests.value = [newRequest, ...helpRequests.value];
-
-  formData.title = '';
-  formData.content = '';
-  formData.location = '';
-  formData.contact = '';
-
-  showToast('求助資訊已發布');
-  activeTab.value = 1;
-
-  // ✅ 標記為已解決 → 移除該筆貼文
-  const markAsResolved = (id: number) => {
-    helpRequests.value = helpRequests.value.filter(req => req.id !== id);
-    closeRequest();
-    showToast('貼文已標記為已解決');
-  };
+  await createPost();
 };
 
 // 切換附近 5 公里
@@ -568,100 +630,25 @@ const toggleNearby = () => {
   showNearby.value = !showNearby.value;
 };
 
-
-// const filteredRequests = computed(() => {
-//   let list = helpRequests.value.filter(req => !req.isResolved);
-
-//   if (showNearby.value && userLocation.value) {
-//     list = list.filter((req) => {
-//       const distance = calculateDistance(
-//         userLocation.value!.lat,
-//         userLocation.value!.lng,
-//         req.lat,
-//         req.lng
-//       );
-//       return distance <= 5;
-//     });
-//   }
-
-//   // ✅ 自己發的先顯示在上面，其次再照 id（時間）排序
-//   return [...list].sort((a, b) => {
-//     if (a.isMine === b.isMine) {
-//       return b.id - a.id; // 新的在上面
-//     }
-//     return a.isMine ? -1 : 1; // true 在前面
-//   });
-// });
-
-const filteredRequests = computed(() => {
-  // 1. 先排除已解決的
-  let list = helpRequests.value.filter(req => !req.isResolved);
-
-  // 2. 如果有取得使用者位置，順便「加上距離」欄位，等等排序會用到
-  if (userLocation.value) {
-    const { lat, lng } = userLocation.value;
-    list = list.map(req => ({
-      ...req,
-      distanceKm: calculateDistance(lat, lng, req.lat, req.lng),
-    }));
-  }
-
-  // 3. 若目前是「只看附近」，就先把超過 5 公里以外的濾掉
-  if (showNearby.value && userLocation.value) {
-    list = list.filter(req => (req.distanceKm ?? Infinity) <= 5);
-  }
-
-  // 4. 排序邏輯：
-  //    (1) 自己發的在最前面
-  //    (2) 距離由近到遠
-  //    (3) 緊急程度：1 > 2 > 3 > 未填
-  //    (4) 同條件下，新的貼文在前（id 較大）
-  return [...list].sort((a, b) => {
-    // (1) 是否自己發的
-    if (a.isMine !== b.isMine) {
-      return a.isMine ? -1 : 1;
-    }
-
-    // (2) 距離比較（只有在有 userLocation 時才比較）
-    if (userLocation.value) {
-      const da = a.distanceKm ?? Infinity;
-      const db = b.distanceKm ?? Infinity;
-      if (da !== db) {
-        return da - db; // 距離小的排前面
-      }
-    }
-
-    // (3) 緊急程度比較（1 最優先）
-    const ua = urgencyRank(a.urgency);
-    const ub = urgencyRank(b.urgency);
-    if (ua !== ub) {
-      return ua - ub; // rank 小的排前面
-    }
-
-    // (4) 最後用 id 當 tie-breaker：新貼文排前面
-    return b.id - a.id;
-  });
+// 監聽 showNearby 變化，重新載入貼文
+watch(showNearby, () => {
+  fetchPosts();
 });
 
-
-const markAsResolved = (id: number) => {
-  const target = helpRequests.value.find(req => req.id === id);
-  if (target) {
-    target.isResolved = true; // ✅ 標記為已解決，會觸發 transition-group 的離場動畫
+// 監聽 activeTab 變化，切換到列表頁時重新載入
+watch(activeTab, (newTab) => {
+  if (newTab === 1) {
+    fetchPosts();
   }
-  closeRequest();
-  showToast('貼文已標記為已解決');
-  // Tabs
-  const tabs = [
-    { name: '發布求助', icon: Send },
-    { name: '求助資訊', icon: Users },
-    { name: '地圖定位', icon: Map }
-  ];
+});
 
+const filteredRequests = computed(() => {
+  return helpRequests.value;
+});
 
-
-  const selectedRequest = ref<HelpRequest | null>(null);
-}
+const markAsResolved = async (id: number) => {
+  await resolvePost(id);
+};
 
 </script>
 

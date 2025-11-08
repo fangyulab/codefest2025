@@ -249,6 +249,7 @@ def get_map_data():
 
 # ==================== 啟動伺服器 ====================
 if __name__ == "__main__":
+    # 已佈署：https://flask-demo-188795468423.asia-east1.run.app/api
     port = int(os.environ.get("PORT", 8080))
     print(f"後端伺服器啟動於 http://0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port)

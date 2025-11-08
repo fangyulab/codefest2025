@@ -1,6 +1,6 @@
+<!-- MapPage.vue -->
 <template>
-  <div
-  >
+  <div>
     <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2 space-y-4 pb-4">
       <Map class="w-5 h-5 text-indigo-500" />
       地圖定位與距離
@@ -78,7 +78,7 @@
       </div>
     </div>
 
-    <!-- 下方距離列表（沿用原本邏輯） -->
+    <!-- 下方距離列表 -->
     <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">
       <div v-if="userLocation && helpRequests.length > 0" class="space-y-2">
         <p class="text-xs font-medium text-slate-700">
@@ -97,7 +97,7 @@
                 class="w-3 h-3"
                 :style="{ color: getUrgencyColor(req.urgency) }"
             />
-            {{ req.location }}
+            {{ req.locationText || '位置資訊' }}
           </p>
           <p class="text-slate-500">
             約
@@ -137,13 +137,13 @@ interface HelpRequest {
   id: number;
   title: string;
   content: string;
-  location: string;
+  location: string; // 後端格式："緯度,經度"
+  locationText?: string; // 顯示用的地址文字
   contact?: string;
   timestamp: string;
   lat: number;
   lng: number;
-  // 可選的緊急程度（高 / 中 / 低）
-  urgency?: string;
+  urgency?: number; // 後端是 number (1/2/3)
 }
 
 interface UserLocation {
@@ -151,25 +151,23 @@ interface UserLocation {
   lng: number;
 }
 
-
 interface SelectedHelpRequest extends HelpRequest {
   distanceKm?: number;
 }
 
-// 依照緊急程度代碼回傳顏色（和 App.vue / legend 同一組）
-const getUrgencyColor = (urgency?: string) => {
+// 依照緊急程度代碼回傳顏色
+const getUrgencyColor = (urgency?: number) => {
   switch (urgency) {
-    case '1': // 極度緊急
+    case 1: // 極度緊急
       return '#D45251';
-    case '2': // 高度緊急
+    case 2: // 高度緊急
       return '#FD853A';
-    case '3': // 中度緊急
+    case 3: // 中度緊急
       return '#F5BA4B';
     default:  // 未標記
       return '#738995';
   }
 };
-
 
 const props = defineProps<{
   helpRequests: HelpRequest[];
@@ -219,20 +217,18 @@ const updateUserMarker = () => {
   // 用 SVG 檔當作 icon
   const icon = L.icon({
     iconUrl: myLocationIconUrl,
-    // 這兩個數字請依照 SVG 實際大小微調
-    iconSize: [32, 32],      // 寬、高（px）
-    iconAnchor: [16, 16],    // 圖片中「尖端 / 圓心」對應的位置
-    popupAnchor: [0, -16]    // 之後如果有 popup，可以從 icon 上方冒出
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
   });
 
   if (!userMarker) {
     userMarker = L.marker(latlng, { icon }).addTo(mapInstance);
   } else {
-    userMarker.setIcon(icon);    // 確保 icon 也更新
+    userMarker.setIcon(icon);
     userMarker.setLatLng(latlng);
   }
 };
-
 
 // 開啟詳情（marker 點擊時）
 const openRequestFromMap = (req: HelpRequest) => {
@@ -257,7 +253,7 @@ const closeSelectedRequest = () => {
   selectedRequest.value = null;
 };
 
-// 更新所有求助 marker（含紅橘黃點）
+// 更新所有求助 marker
 const updateHelpMarkers = () => {
   if (!mapInstance || !markersLayer) return;
 
@@ -271,9 +267,7 @@ const updateHelpMarkers = () => {
   const bounds = L.latLngBounds([]);
 
   props.helpRequests.forEach((req) => {
-  // 根據 urgency 決定顏色（1 / 2 / 3 對應紅 / 橘 / 黃）
-  const color = getUrgencyColor(req.urgency);
-
+    const color = getUrgencyColor(req.urgency);
 
     const icon = L.divIcon({
       className: 'custom-help-icon',
@@ -301,7 +295,7 @@ const updateHelpMarkers = () => {
           ${req.title}
         </div>
         <div style="font-size:12px;color:#64748b;margin-bottom:4px;">
-          ${req.location}
+          ${req.locationText || '位置資訊'}
         </div>
         <div style="font-size:11px;color:#94a3b8;">
           ${req.timestamp}
@@ -310,7 +304,6 @@ const updateHelpMarkers = () => {
     `;
     marker.bindPopup(popupHtml, { maxWidth: 220 });
 
-    // 點 marker 時打開 Vue 的詳情 panel
     marker.on('click', () => {
       openRequestFromMap(req);
     });
@@ -328,14 +321,14 @@ const updateHelpMarkers = () => {
   }
 };
 
-// 重新整理視圖（fit 到目前所有 marker）
+// 重新整理視圖
 const refitBounds = () => {
   if (mapInstance && lastBounds && lastBounds.isValid()) {
     mapInstance.fitBounds(lastBounds, { padding: [24, 24], maxZoom: 15 });
   }
 };
 
-// 距離計算（跟 app.vue 一致）
+// 距離計算
 const calculateDistance = (
   lat1: number,
   lon1: number,
