@@ -110,7 +110,7 @@
           <!-- 無資料時 -->
           <div v-if="filteredRequests.length === 0" class="text-center py-10 px-6 text-slate-400">
             <Users class="mx-auto mb-4 w-12 h-12 opacity-40" />
-            <p class="text-sm">目前尚無求助資訊</p>
+            <p class="text-base">目前尚無求助資訊</p>
             <p class="text-[10px] mt-1">前往「發布求助」頁籤建立第一筆需求 🌱</p>
           </div>
 
@@ -227,7 +227,7 @@
               </p>
             </header>
 
-              <!-- 求助內容 -->
+            <!-- 求助內容 -->
             <section class="space-y-1">
               <p class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700">
                 {{ selectedRequest.content }}
@@ -263,12 +263,12 @@
               </div>
             </section>
 
-          
+
 
             <!-- 聯絡方式（如果有填） -->
+            <p class="font-medium text-slate-800">聯絡方式:</p>
             <section v-if="selectedRequest.contact"
               class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 space-y-1.5 text-[12px]">
-              <p class="font-medium text-slate-800">聯絡方式</p>
               <p class="text-slate-700 break-words">
                 {{ selectedRequest.contact }}
               </p>
@@ -440,8 +440,6 @@ const handleSubmit = () => {
 const toggleNearby = () => {
   showNearby.value = !showNearby.value;
 };
-
-
 
 
 // 過濾顯示的求助資訊
