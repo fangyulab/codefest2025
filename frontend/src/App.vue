@@ -399,6 +399,7 @@ interface HelpRequest {
   content: string;
   location: string;
   contact?: string;
+  urgency?: string;
   timestamp: string;
   distanceKm?: number;
   lat: number;
@@ -434,6 +435,7 @@ const helpRequests = ref<HelpRequest[]>([
     timestamp: new Date().toLocaleString('zh-TW'),
     lat: 25.033,
     lng: 121.5654,
+    urgency:'2',
     isMine: false, // ✅ 這筆是「別人發的」，等等會變成黃底
     isResolved: false // ✅ 新增
   },
@@ -448,6 +450,7 @@ const helpRequests = ref<HelpRequest[]>([
     timestamp: new Date().toLocaleString('zh-TW'),
     lat: 26.033,
     lng: 123.5654,
+    urgency:'2',
     isMine: false, // ✅ 這筆是「別人發的」，等等會變成黃底
     isResolved: false // ✅ 新增
   }
@@ -575,11 +578,12 @@ const handleSubmit = () => {
     title: formData.title.trim(),
     content: formData.content.trim(),
     location: formData.location.trim(),
+    urgency: formData.urgency,
     contact: formData.contact.trim() || undefined,
     timestamp: new Date().toLocaleString('zh-TW'),
     lat,
-    lng
-    , isMine: true // ✅ 自己送出的永遠標記為「我發的」
+    lng,
+    isMine: true // ✅ 自己送出的永遠標記為「我發的」
   };
 
   helpRequests.value = [newRequest, ...helpRequests.value];
@@ -656,19 +660,6 @@ const markAsResolved = (id: number) => {
   closeRequest();
   showToast('貼文已標記為已解決');
 };
-
-// 點擊貼文開啟彈窗
-const openRequest = (req: HelpRequest) => {
-  selectedRequest.value = req;
-  isModalOpen.value = true;
-};
-
-// 關閉彈窗
-const closeRequest = () => {
-  isModalOpen.value = false;
-  selectedRequest.value = null;
-};
-
 </script>
 
 <style scoped>
