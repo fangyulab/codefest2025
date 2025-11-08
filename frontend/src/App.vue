@@ -47,7 +47,7 @@
                     <Icon icon="fluent:location-20-filled" class="size-5" />
                     定位 *
                   </div>
-                  <input type="text" v-model="formData.location" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
+                  <input type="text" v-model="formData.locationText" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
                             focus:outline-none focus:ring-2 focus:ring-[#93D4DF]
                             placeholder:text-slate-300 transition-all" placeholder="例：台北市大安區信義路三段、學校側門附近" />
                   <button @click="catchLocation" class="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#93D4DF] text-[10px] font-medium text-[#356C77] text-center">
@@ -448,24 +448,24 @@ const fetchPosts = async () => {
             }
           }else{
             results.push({
-            id: post.id,
-            title: post.title,
-            content: post.content,
-            location: post.location,
-            locationText: addressText,
-            contact: post.contact,
-            urgency: post.urgency,
-            timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
-            latitude: lat,
-            longitude: lng,
-            lat,
-            lng,
-            isMine: post.user_id === CURRENT_USER_ID,
-            resolved: post.resolved,
-            distance: post.distance,
-            distance_text: post.distance_text,
-            helper_count: post.helper_count || 0
-          });
+              id: post.id,
+              title: post.title,
+              content: post.content,
+              location: post.location,
+              locationText: addressText,
+              contact: post.contact,
+              urgency: post.urgency,
+              timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
+              latitude: lat,
+              longitude: lng,
+              lat,
+              lng,
+              isMine: post.user_id === CURRENT_USER_ID,
+              resolved: post.resolved,
+              distance: post.distance,
+              distance_text: post.distance_text,
+              helper_count: post.helper_count || 0
+            });
           }
         }
 
@@ -535,6 +535,7 @@ const createPost = async () => {
       formData.title = '';
       formData.content = '';
       formData.location = '';
+      formData.locationText = '';
       formData.contact = '';
       formData.urgency = 0;
 
@@ -879,7 +880,7 @@ const catchLocation = async () => {
 
         // 反查地址顯示在輸入框
         const address = await fetchAddress(lat, lng);
-        formData.location = address;
+        formData.locationText = address;
 
         showToast('已套用目前位置');
       } catch (error) {
