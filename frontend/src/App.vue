@@ -188,6 +188,11 @@
 
         <!-- Tab 3: 地圖定位 -->
         <section v-else-if="activeTab === 2" class="space-y-4">
+          <MapPage :help-requests="helpRequests" :user-location="userLocation" />
+        </section>
+
+         <!---
+        <section v-else-if="activeTab === 2" class="space-y-4">
           <div
             class="bg-white/90 backdrop-blur shadow-sm rounded-2xl border border-slate-100 p-5 sm:p-6 transition-all">
             <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
@@ -247,6 +252,7 @@
             </div>
           </div>
         </section>
+      -->
       </div>
     </main>
 
@@ -392,6 +398,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { MapPin, Users, Map, Send } from 'lucide-vue-next';
 import { Icon } from '@iconify/vue';
+import MapPage from './pages/MapPage.vue';
 
 interface HelpRequest {
   id: number;
@@ -416,12 +423,39 @@ interface UserLocation {
 const selectedRequest = ref<HelpRequest | null>(null);
 
 
-const activeTab = ref(0);
+const formatUrgency = (value?: string) => {
+  switch (value) {
+    case '1':
+      return '極度緊急';
+    case '2':
+      return '高度緊急';
+    case '3':
+      return '中度緊急';
+    default:
+      return '未標記';
+  }
+};
+
+const urgencyPillClass = (value?: string) => {
+  switch (value) {
+    case '1':
+      return 'bg-red-50 text-red-600';
+    case '2':
+      return 'bg-orange-50 text-orange-600';
+    case '3':
+      return 'bg-amber-50 text-amber-600';
+    default:
+      return 'bg-slate-100 text-slate-500';
+  }
+};
+
+const activeTab = ref (0);
 const formData = reactive({
   title: '',
   content: '',
   location: '',
-  contact: ''
+  contact: '',
+  urgency: ''
 });
 //const helpRequests = ref<HelpRequest[]>([]);
 
@@ -466,13 +500,13 @@ const urgencyOptions = [
     value: '1',
     label: '極度緊急',
     activeClass: 'bg-red-50 text-red-600 border-red-200 shadow-sm',
-    dotClass: 'bg-red-500'
+    dotClass: 'bg-[#D45251]'
   },
   {
     value: '2',
     label: '高度緊急',
     activeClass: 'bg-orange-50 text-orange-600 border-orange-200 shadow-sm',
-    dotClass: 'bg-orange-500'
+    dotClass: 'bg-[#FD853A]'
   },
   {
     value: '3',
@@ -583,7 +617,8 @@ const handleSubmit = () => {
     timestamp: new Date().toLocaleString('zh-TW'),
     lat,
     lng,
-    isMine: true // ✅ 自己送出的永遠標記為「我發的」
+    isMine: true, // ✅ 自己送出的永遠標記為「我發的」
+    isResolved: false // ✅ 新增
   };
 
   helpRequests.value = [newRequest, ...helpRequests.value];
@@ -625,6 +660,7 @@ const toggleNearby = () => {
 //   }
 //   return helpRequests.value;
 // });
+// 點擊貼文開啟彈窗
 
 const filteredRequests = computed(() => {
   let list = helpRequests.value.filter(req => !req.isResolved);
@@ -659,7 +695,18 @@ const markAsResolved = (id: number) => {
   }
   closeRequest();
   showToast('貼文已標記為已解決');
-};
+// Tabs
+const tabs = [
+  { name: '發布求助', icon: Send },
+  { name: '求助資訊', icon: Users },
+  { name: '地圖定位', icon: Map }
+];
+
+
+const isModalOpen = ref(false);
+const selectedRequest = ref<HelpRequest | null>(null);
+}
+
 </script>
 
 <style scoped>
