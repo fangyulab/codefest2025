@@ -558,7 +558,6 @@ const resolvePost = async (postId: number) => {
   }
 };
 
-<<<<<<< HEAD
 
 // 篩選用 tags
 const districtTags = [
@@ -583,8 +582,6 @@ const incidentTags = [
 const selectedDistrict = ref<string>('all');
 const selectedIncident = ref<string>('all');
 
-
-=======
 const helpRequest = async (postId: number) => {
   try {
     isHelping.value = true;
@@ -621,7 +618,6 @@ const helpRequest = async (postId: number) => {
     isHelping.value = false;
   }
 };
->>>>>>> ad13b9b5d4bba023b8fd48177bdfde650581f189
 
 // ==================== 狀態管理 ====================
 const selectedRequest = ref<HelpRequest | null>(null);
