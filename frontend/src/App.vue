@@ -325,9 +325,9 @@
 
       <!-- 底部 Tab 導航 -->
       <nav class="fixed bottom-0 left-0 right-0 z-20 flex justify-center pb-4">
-        <div class="relative w-full max-w-md px-4">
+        <div class="relative w-full max-w-md p-4 bg-gray-50">
           <div class="relative m-2 mt-0 mb-1 flex items-center gap-2 rounded-full
-                  bg-[#DBF1F5] px-3 py-2 h-14">
+                  bg-[#DBF1F5] px-3 py-2 pb-4 h-14">
             <div class="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-1/3
                     rounded-full bg-[#71C5D5] shadow-md transition-transform duration-300" :class="translateClass" />
 
