@@ -203,33 +203,42 @@
     </main>
 
     <!-- 求助詳細內容彈窗（先做空白卡片） -->
+    <!-- 求助詳細內容彈窗 -->
     <transition name="fade-up">
       <div v-if="isModalOpen"
-        class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-        <div class="w-full max-w-md mx-4 rounded-2xl bg-white shadow-xl border border-slate-200 p-5 relative">
+        class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
+        @click.self="closeRequest">
+        <div class="w-full max-w-md mx-4 rounded-2xl bg-white shadow-xl border border-slate-200 p-6 relative">
           <!-- 關閉按鈕 -->
-          <button class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
+          <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
             @click="closeRequest" aria-label="close">
-            <Icon icon="mdi:close" class="w-5 h-5 text-slate-400" />
+            <Icon icon="mdi:close" class="w-5 h-5" />
           </button>
 
           <!-- 內容區：顯示被點擊的求助 -->
-          <div v-if="selectedRequest" class="pt-6 space-y-4 text-sm text-slate-800">
-            <!-- 標題 -->
-            <h3 class="text-base font-semibold text-slate-900 leading-snug">
-              {{ selectedRequest.title }}
-            </h3>
+          <div v-if="selectedRequest" class="flex flex-col gap-5 text-sm text-slate-800">
+            <!-- 標題 + 時間 -->
+            <header class="space-y-1 pr-6">
+              <h3 class="text-base font-semibold text-slate-900 leading-snug">
+                {{ selectedRequest.title }}
+              </h3>
+              <p class="text-[11px] text-slate-400">
+                發布時間：{{ selectedRequest.timestamp }}
+              </p>
+            </header>
 
-            <!-- 求助內容 -->
-            <p class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700">
-              {{ selectedRequest.content }}
-            </p>
+              <!-- 求助內容 -->
+            <section class="space-y-1">
+              <p class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700">
+                {{ selectedRequest.content }}
+              </p>
+            </section>
 
-            <!-- 地點 / 距離 / 時間 -->
-            
-              <div class="flex items-start gap-1.5">
-                <MapPin class="w-3.5 h-3.5 mt-0.5 text-indigo-500" />
-                <div>
+            <!-- 基本資訊：地點 / 距離 -->
+            <section class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]">
+              <div class="flex items-start gap-2">
+                <MapPin class="w-4 h-4 mt-0.5 text-indigo-500 shrink-0" />
+                <div class="leading-relaxed">
                   <span class="font-medium text-slate-800">地點：</span>
                   <span class="text-slate-700">
                     {{ selectedRequest.location }}
@@ -237,9 +246,9 @@
                 </div>
               </div>
 
-              <div v-if="userLocation" class="flex items-center gap-1.5 text-slate-600">
+              <div v-if="userLocation" class="flex items-center gap-2 pl-6 text-[11px]">
                 <span
-                  class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-medium">
+                  class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium">
                   約
                   {{
                     calculateDistance(
@@ -247,20 +256,18 @@
                       userLocation.lng,
                       selectedRequest.lat,
                       selectedRequest.lng
-                  ).toFixed(2)
+                    ).toFixed(2)
                   }}
                   公里內
                 </span>
               </div>
+            </section>
 
-              <div class="text-slate-500">
-                <span class="font-medium">發布時間：</span>
-                <span>{{ selectedRequest.timestamp }}</span>
-              </div>
+          
 
             <!-- 聯絡方式（如果有填） -->
-            <div v-if="selectedRequest.contact"
-              class="bg-white border border-slate-100 rounded-xl p-3 text-[11px] space-y-1">
+            <section v-if="selectedRequest.contact"
+              class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 space-y-1.5 text-[12px]">
               <p class="font-medium text-slate-800">聯絡方式</p>
               <p class="text-slate-700 break-words">
                 {{ selectedRequest.contact }}
@@ -268,10 +275,10 @@
               <p class="text-[10px] text-slate-400">
                 請自行斟酌聯絡與資訊安全，避免提供過多個資。
               </p>
-            </div>
+            </section>
           </div>
 
-          <!-- 理論上不太會看到，但保險加一個 fallback -->
+          <!-- 保險 fallback -->
           <div v-else class="h-32 flex items-center justify-center text-xs text-slate-400">
             尚未選取任何求助貼文
           </div>
