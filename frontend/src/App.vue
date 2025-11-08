@@ -67,7 +67,43 @@
                 />
               </div>
             </div>
+
+            <div class="block text-lg font-semibold text-slate-700 mb-1.5">
+              <div class="flex items-center gap-2">
+                <Icon icon="si:alert-fill" class="size-5" />
+                緊急程度
+              </div>
+              <div class="mt-2 grid grid-cols-3 gap-2 text-[10px]">
+                <button
+                  v-for="option in urgencyOptions"
+                  :key="option.value"
+                  type="button"
+                  @click="formData.urgency = option.value"
+                  :class="[
+                    'flex flex-col items-start justify-center px-2.5 py-2 rounded-2xl border transition-all h-full',
+                    formData.urgency === option.value
+                      ? option.activeClass
+                      : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                  ]"
+                >
+                  <div class="flex items-center gap-1.5 mb-0.5">
+                    <span
+                      class="w-1.5 h-1.5 rounded-full"
+                      :class="option.dotClass"
+                    ></span>
+                    <span class="font-semibold tracking-tight">
+                      {{ option.label }}
+                    </span>
+                  </div>
+                  <p class="text-[9px] leading-snug opacity-80">
+                    {{ option.desc }}
+                  </p>
+                </button>
+              </div>
+            </div>
           </div>
+
+
           <button
             @click="handleSubmit"
             class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white py-3
@@ -266,9 +302,10 @@ import { MapPin, Users, Map, Send } from 'lucide-vue-next';
 interface HelpRequest {
   id: number;
   title: string;
-  content: string;
+  content?: string;
   location: string;
   contact?: string;
+  urgency?: string;
   timestamp: string;
   lat: number;
   lng: number;
@@ -284,13 +321,35 @@ const formData = reactive({
   title: '',
   content: '',
   location: '',
-  contact: ''
+  contact: '',
+  urgency: ''
 });
 const helpRequests = ref<HelpRequest[]>([]);
 const showNearby = ref(false);
 const userLocation = ref<UserLocation | null>(null);
 const toastMessage = ref<string | null>(null);
 let toastTimer: number | null = null;
+
+const urgencyOptions = [
+  {
+    value: '1',
+    label: '高（需要立即協助）',
+    activeClass: 'bg-red-50 text-red-600 border-red-200 shadow-sm',
+    dotClass: 'bg-red-500'
+  },
+  {
+    value: '2',
+    label: '中（盡快協助）',
+    activeClass: 'bg-orange-50 text-orange-600 border-orange-200 shadow-sm',
+    dotClass: 'bg-orange-500'
+  },
+  {
+    value: '3',
+    label: '低（一般關懷）',
+    activeClass: 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm',
+    dotClass: 'bg-emerald-500'
+  }
+];
 
 // 取得使用者位置
 onMounted(() => {
@@ -354,6 +413,7 @@ const handleSubmit = () => {
     title: formData.title.trim(),
     content: formData.content.trim(),
     location: formData.location.trim(),
+    urgency: formData.urgency,
     contact: formData.contact.trim() || undefined,
     timestamp: new Date().toLocaleString('zh-TW'),
     lat,
@@ -366,6 +426,7 @@ const handleSubmit = () => {
   formData.content = '';
   formData.location = '';
   formData.contact = '';
+  formData.urgency = '';
 
   showToast('求助資訊已發布');
   activeTab.value = 1;
