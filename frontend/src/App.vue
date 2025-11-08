@@ -250,114 +250,165 @@
 
       <!-- 求助詳細內容彈窗 -->
       <transition name="fade-up">
-        <div v-if="isModalOpen"
+        <div
+          v-if="isModalOpen"
           class="fixed inset-0 z-2000 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
-          @click.self="closeRequest">
-          <div :class="[
-            'w-full max-w-md mx-4 rounded-3xl shadow-xl p-6 relative border transition-all',
-            selectedRequest?.isMine
-              ? 'bg-white border-[#B4E2EA]'
-              : 'bg-[#DBF1F5] border-[#F8E3BC]'
-          ]">
+          @click.self="closeRequest"
+        >
+          <div
+            :class="[
+              'w-full max-w-md mx-4 rounded-3xl shadow-xl relative border transition-all',
+              selectedRequest && selectedRequest.isMine
+                ? 'bg-white border-[#B4E2EA]'
+                : 'bg-[#DBF1F5] border-none'
+            ]"
+          >
             <!-- 關閉按鈕 -->
-            <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
-              @click="closeRequest" aria-label="close">
+            <button
+              class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+              @click="closeRequest"
+              aria-label="close"
+            >
               <Icon icon="mdi:close" class="w-5 h-5" />
             </button>
 
-            <!-- 內容區：顯示被點擊的求助 -->
-            <div v-if="selectedRequest" class="flex flex-col gap-5 text-sm text-slate-800">
+            <!-- 有選取貼文時 -->
+            <div v-if="selectedRequest" class="flex flex-col ">
               <!-- 標題 + 時間 -->
-              <header class="space-y-1 pr-6">
-                <h3 class="text-base font-semibold text-slate-900 leading-snug">
-                  {{ selectedRequest.title }}
-                </h3>
-                <p class="text-[11px] text-slate-400">
-                  發布時間：{{ selectedRequest.timestamp }}
-                </p>
-              </header>
+              <div class="p-6 flex flex-col gap-5 text-sm text-slate-800">
+                <header class="space-y-1 pr-6">
+                  <h3 class="text-base font-semibold text-slate-900 leading-snug">
+                    {{ selectedRequest.title }}
+                  </h3>
+                  <p class="text-[11px] text-slate-400">
+                    發布時間：{{ selectedRequest.timestamp }}
+                  </p>
+                </header>
 
-              <!-- 基本資訊：地點 / 距離 -->
-              <section class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]">
-                <div class="flex items-start gap-2">
-                  <Icon icon="fluent:location-20-filled" class="size-4" :class="[selectedRequest.urgency === 1 ? 'text-[#D45251]' : '',
-                  selectedRequest.urgency === 2 ? 'text-[#FD853A]' : '',
-                  selectedRequest.urgency === 3 ? 'text-[#F5BA4B]' : '']" />
-                  <div class="leading-relaxed">
-                    <span class="font-medium text-slate-800">地點：</span>
-                    <span class="text-slate-700">
-                      {{ selectedRequest.locationText }}
+                <!-- 地點 / 距離 -->
+                <section
+                  class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]"
+                >
+                  <div class="flex items-start gap-2">
+                    <Icon
+                      icon="fluent:location-20-filled"
+                      class="size-4"
+                      :class="[
+                        selectedRequest.urgency === 1 ? 'text-[#D45251]' : '',
+                        selectedRequest.urgency === 2 ? 'text-[#FD853A]' : '',
+                        selectedRequest.urgency === 3 ? 'text-[#F5BA4B]' : ''
+                      ]"
+                    />
+                    <div class="leading-relaxed">
+                      <span class="font-medium text-slate-800">地點：</span>
+                      <span class="text-slate-700">
+                        {{ selectedRequest.locationText }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="selectedRequest.distance_text"
+                    class="flex items-center gap-2 pl-6 text-[11px]"
+                  >
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium"
+                    >
+                      {{ selectedRequest.distance_text }}
                     </span>
                   </div>
+                </section>
+
+                <!-- 求助內容 -->
+                <section class="space-y-1">
+                  <p
+                    class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700"
+                  >
+                    {{ selectedRequest.content }}
+                  </p>
+                </section>
+
+                <!-- 聯絡方式 -->
+                <div
+                  v-if="selectedRequest.contact"
+                  class="flex flex-wrap items-center gap-2 text-[13px] text-slate-700"
+                >
+                  <p class="font-medium text-slate-800 m-0">聯絡方式：</p>
+                  <p class="break-words">
+                    {{ selectedRequest.contact }}
+                  </p>
                 </div>
+                <p class="text-[10px] text-slate-400 mt-1">
+                  請自行斟酌聯絡與資訊安全，避免提供過多個資。
+                </p>
 
-                <div v-if="selectedRequest.distance_text" class="flex items-center gap-2 pl-6 text-[11px]">
-                  <span
-                    class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium">
-                    {{ selectedRequest.distance_text }}
-                  </span>
+                <!-- 願意幫助人數 -->
+                <div
+                  v-if="selectedRequest.helper_count && selectedRequest.helper_count > 0"
+                  class="flex items-center gap-2 text-[12px] text-slate-600"
+                >
+                  <Icon icon="mdi:account-multiple" class="size-4" />
+                  <span>{{ selectedRequest.helper_count }} 人表示願意提供協助</span>
                 </div>
-              </section>
-
-
-              <!-- 求助內容 -->
-              <section class="space-y-1">
-                <p class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700">
-                  {{ selectedRequest.content }}
-                </p>
-              </section>
-
-
-
-              <!-- 聯絡方式（如果有填） -->
-              <div v-if="selectedRequest.contact" class="flex flex-wrap items-center gap-2 text-[13px] text-slate-700">
-                <p class="font-medium text-slate-800 m-0">聯絡方式：</p>
-                <p class="break-words">
-                  {{ selectedRequest.contact }}
-                </p>
               </div>
-              <p class="text-[10px] text-slate-400 mt-1">
-                請自行斟酌聯絡與資訊安全，避免提供過多個資。
-              </p>
+
+              <!-- ✅ 自己的貼文：標記為已解決 -->
+              <div
+                v-if="selectedRequest.isMine"
+                class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-white/30 backdrop-blur-sm rounded-b-3xl"
+              >
+                <button
+                  @click="markAsResolved(selectedRequest.id)"
+                  :disabled="isResolving"
+                  class="w-full py-4 text-sm font-medium text-slate-700 tracking-tight active:scale-[0.99] transition-all rounded-b-3xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ isResolving ? '處理中...' : '標記為已解決' }}
+                </button>
+              </div>
+
+              <!-- 別人的貼文：我要幫助他 + Google Map -->
+              <div
+                v-else
+                class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-[#DBF1F5]/50 backdrop-blur-sm rounded-b-3xl"
+              >
+                <div class="flex w-full">
+                  <button
+                    @click="helpRequest(selectedRequest.id)"
+                    :disabled="isHelping"
+                    class="flex-1 py-4 text-sm font-medium text-[#356C77] border-r border-slate-300/30 
+                          tracking-tight active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ isHelping ? '通知中...' : '我要幫助他' }}
+                  </button>
+
+                  <button
+                    v-if="selectedRequest.lat && selectedRequest.lng"
+                    @click="openGoogleMap(selectedRequest.lat, selectedRequest.lng)"
+                    class="flex-1 py-4 text-sm font-medium text-[#356C77] tracking-tight 
+                          active:scale-[0.99] transition-all rounded-br-3xl"
+                  >
+                    進入 Google Map
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <!-- 保險 fallback -->
-            <div v-else class="h-32 flex items-center justify-center text-xs text-slate-400">
+            <!-- 沒有選取任何貼文時 -->
+            <div
+              v-else
+              class="h-32 flex items-center justify-center text-xs text-slate-400"
+            >
               尚未選取任何求助貼文
-            </div>
-
-            <!-- 在聯絡方式區塊後面添加 -->
-            <div v-if="selectedRequest.helper_count && selectedRequest.helper_count > 0" 
-                class="flex items-center gap-2 text-[12px] text-slate-600">
-              <Icon icon="mdi:account-multiple" class="size-4" />
-              <span>{{ selectedRequest.helper_count }} 人表示願意提供協助</span>
-            </div>
-
-            <!-- ✅ 只有自己的貼文才顯示 -->
-            <div v-if="selectedRequest?.isMine"
-              class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-white/30 backdrop-blur-sm rounded-b-3xl">
-              <button @click="markAsResolved(selectedRequest.id)" :disabled="isResolving"
-                class="w-full py-4 text-sm font-medium text-slate-700 tracking-tight active:scale-[0.99] transition-all rounded-b-3xl disabled:opacity-50 disabled:cursor-not-allowed">
-                {{ isResolving ? '處理中...' : '標記為已解決' }}
-              </button>
-            </div>
-
-            <!-- 別人的貼文 -->
-            <div v-else
-              class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-[#DBF1F5]/50 backdrop-blur-sm rounded-b-3xl">
-              <button @click="helpRequest(selectedRequest.id)" :disabled="isHelping"
-                class="w-full py-4 text-sm font-medium text-[#356C77] tracking-tight active:scale-[0.99] transition-all rounded-b-3xl disabled:opacity-50 disabled:cursor-not-allowed">
-                {{ isHelping ? '通知中...' : '我要幫助他' }}
-              </button>
             </div>
           </div>
         </div>
       </transition>
 
 
+
       <!-- 底部 Tab 導航 -->
       <nav class="fixed bottom-0 left-0 right-0 z-20 flex justify-center">
-        <div class="relative w-full max-w-md p-4 bg-gray-50">
+        <div class="relative w-full max-w-md p-4">
           <div class="relative m-2 mt-0 mb-1 flex items-center justify-center gap-2 rounded-full
                   bg-[#DBF1F5] px-3 py-2 h-14">
             <div class="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-1/3
@@ -681,8 +732,14 @@ const helpRequest = async (postId: number) => {
   }
 };
 
+const openGoogleMap = (lat: number, lng: number) => {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  window.open(url, "_blank");
+};
+
 // ==================== 狀態管理 ====================
 const selectedRequest = ref<HelpRequest | null>(null);
+
 const activeTab = ref(1);
 const formData = reactive({
   title: '',
