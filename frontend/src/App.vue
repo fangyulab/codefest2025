@@ -93,6 +93,7 @@
                       {{ option.label }}
                     </span>
                   </div>
+                
                   <p class="text-[9px] leading-snug opacity-80">
                     {{ option.desc }}
                   </p>
@@ -199,7 +200,7 @@
                   </div>
                   <span class="text-slate-300">•</span>
                   <span class="text-slate-500">{{ selectedRequest.timestamp }}</span>
-
+                  
                   <template v-if="selectedRequest.distanceKm !== undefined">
                     <span class="text-slate-300">•</span>
                     <span>距離約 {{ selectedRequest.distanceKm.toFixed(1) }} 公里</span>
@@ -218,6 +219,7 @@
                       {{ selectedRequest.label }}
                     </span>
                   </template>
+            
                 </div>
 
                 <!-- 內文 -->
@@ -250,22 +252,14 @@
               </div>
             </div>
           </transition>
-
-          <!-- 淡入淡出動畫 -->
-          <style>
-            .fade-enter-active,
-            .fade-leave-active {
-              transition: opacity .15s ease
-            }
-
-            .fade-enter-from,
-            .fade-leave-to {
-              opacity: 0
-            }
-          </style>
         </section>
 
         <!-- Tab 3: 地圖定位 -->
+        <section v-else-if="activeTab === 2" class="space-y-4">
+          <MapPage :help-requests="helpRequests" :user-location="userLocation" />
+        </section>
+
+         <!---
         <section v-else-if="activeTab === 2" class="space-y-4">
           <div
             class="bg-white/90 backdrop-blur shadow-sm rounded-2xl border border-slate-100 p-5 sm:p-6 transition-all">
@@ -326,6 +320,7 @@
             </div>
           </div>
         </section>
+      -->
       </div>
     </main>
 
@@ -365,6 +360,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
 import { MapPin, Users, Map, Send } from 'lucide-vue-next';
+import MapPage from './pages/MapPage.vue';
 
 interface HelpRequest {
   id: number;
@@ -526,6 +522,22 @@ const tabs = [
   { name: '求助資訊', icon: Users },
   { name: '地圖定位', icon: Map }
 ];
+
+
+const isModalOpen = ref(false);
+const selectedRequest = ref<HelpRequest | null>(null);
+
+// 點擊貼文開啟彈窗
+const openRequest = (req: HelpRequest) => {
+  selectedRequest.value = req;
+  isModalOpen.value = true;
+};
+
+// 關閉彈窗
+const closeRequest = () => {
+  isModalOpen.value = false;
+  selectedRequest.value = null;
+};
 </script>
 
 <style scoped>
