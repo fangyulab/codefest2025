@@ -50,6 +50,9 @@
                   <input type="text" v-model="formData.location" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
                             focus:outline-none focus:ring-2 focus:ring-[#93D4DF]
                             placeholder:text-slate-300 transition-all" placeholder="例：台北市大安區信義路三段、學校側門附近" />
+                  <button @click="catchLocation" class="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#93D4DF] text-[10px] font-medium text-[#356C77] text-center">
+                    套用現在位置
+                  </button>
                 </div>
                 <div class="text-xs font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                   <div class="flex items-center gap-2">
@@ -80,10 +83,10 @@
                     ]" @click="formData.urgency = option.value">
                     <input type="radio" class="hidden" name="urgency" :value="option.value"
                       v-model="formData.urgency" />
-                    <span class="inline-block w-2.5 h-2.5 rounded-full border "
+                    <span class="inline-block w-2.5 h-2.5 rounded-full border"
                       :class="formData.urgency === option.value ? 'bg-[#93D4DF] border-[#93D4DF]' : 'border-slate-300'">
                     </span>
-                    <span>{{ option.label }}</span>
+                    <span class="text-xs">{{ option.label }}</span>
                   </div>
                 </div>
               </div>
@@ -432,15 +435,37 @@ const fetchPosts = async () => {
           }
         }
 
-        // 預設顯示的地點文字（先用後端給的）
-        let addressText: string = post.location;
+        if(!post.locationText){
+          // 預設顯示的地點文字（先用後端給的）
+          let addressText: string = post.location;
 
-        // 有經緯度就反查一次（失敗就維持原本 location）
-        if (lat != null && lng != null) {
-          try {
-            addressText = await fetchAddress(lat, lng);
-          } catch (err) {
-            console.warn('貼文地址轉換失敗，使用原始 location：', err);
+          // 有經緯度就反查一次（失敗就維持原本 location）
+          if (lat != null && lng != null) {
+            try {
+              addressText = await fetchAddress(lat, lng);
+            } catch (err) {
+              console.warn('貼文地址轉換失敗，使用原始 location：', err);
+            }
+          }else{
+            results.push({
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            location: post.location,
+            locationText: addressText,
+            contact: post.contact,
+            urgency: post.urgency,
+            timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
+            latitude: lat,
+            longitude: lng,
+            lat,
+            lng,
+            isMine: post.user_id === CURRENT_USER_ID,
+            resolved: post.resolved,
+            distance: post.distance,
+            distance_text: post.distance_text,
+            helper_count: post.helper_count || 0
+          });
           }
         }
 
@@ -449,7 +474,7 @@ const fetchPosts = async () => {
           title: post.title,
           content: post.content,
           location: post.location,
-          locationText: addressText,
+          locationText: post.locationText,
           contact: post.contact,
           urgency: post.urgency,
           timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
@@ -494,6 +519,7 @@ const createPost = async () => {
         title: formData.title.trim(),
         content: formData.content.trim(),
         location: `${userLocation.value.lat},${userLocation.value.lng}`,
+        locationText: formData.locationText,
         urgency: formData.urgency,
         contact: formData.contact.trim(),
         labels: [] // 如果之後需要標籤功能可以加
@@ -627,6 +653,7 @@ const formData = reactive({
   title: '',
   content: '',
   location: '',
+  locationText:'',
   contact: '',
   urgency: 0
 });
@@ -698,20 +725,6 @@ onMounted(() => {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
-
-        // ✅ 這裡將經緯度轉成「可讀地址」填進輸入框
-        try {
-          const address = await fetchAddress(
-            position.coords.latitude,
-            position.coords.longitude
-          );
-          formData.location = address;
-          console.log("使用者位置地址:", address);
-        } catch (err) {
-          console.warn("地址轉換失敗:", err);
-          formData.location = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
-        }
-
         // 再載入貼文列表
         fetchPosts();
       },
@@ -848,6 +861,45 @@ const filteredRequests = computed(() => {
 const markAsResolved = async (id: number) => {
   await resolvePost(id);
 };
+
+const catchLocation = async () => {
+  if (!navigator.geolocation) {
+    showToast('此裝置不支援定位，請手動輸入地址');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      try {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // 更新全域 userLocation，讓 createPost / fetchPosts 都能用
+        userLocation.value = { lat, lng };
+
+        // 反查地址顯示在輸入框
+        const address = await fetchAddress(lat, lng);
+        formData.location = address;
+
+        showToast('已套用目前位置');
+      } catch (error) {
+        console.error('定位轉地址失敗:', error);
+        showToast('定位失敗，請稍後再試');
+      }
+    },
+    (error) => {
+      console.error('定位失敗:', error);
+      showToast('定位失敗，請確認已允許定位權限');
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000
+    }
+  );
+};
+
+
 
 </script>
 
