@@ -123,6 +123,47 @@
               </div>
             </div>
 
+            <!-- 篩選 icon -->
+            <button @click="toggleFilter" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+              <Icon icon="mi:filter" class="w-5 h-5" />
+            </button>
+
+            <!-- 篩選區塊（可收合） -->
+            <transition name="fade-slide">
+              <div v-if="showFilterBar" class="px-4 flex flex-col gap-1.5 mt-1 overflow-hidden">
+                <!-- 行政區 -->
+                <div class="flex items-center gap-1.5 text-[10px] text-slate-500 overflow-x-auto no-scrollbar py-0.5">
+                  <span class="font-medium text-slate-700 flex-shrink-0 mr-1">行政區</span>
+                  <div class="flex flex-nowrap gap-1.5">
+                    <button v-for="tag in districtTags" :key="tag.key" @click="selectedDistrict = tag.key" :class="[
+                      'px-2.5 py-1 rounded-full border text-[10px] flex-shrink-0 transition-all whitespace-nowrap',
+                      selectedDistrict === tag.key
+                        ? 'bg-[#71C5D5] text-white border-[#71C5D5]'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ]">
+                      {{ tag.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 事件 -->
+                <div class="flex items-center gap-1.5 text-[10px] text-slate-500 overflow-x-auto no-scrollbar py-0.5">
+                  <span class="font-medium text-slate-700 flex-shrink-0 mr-1">事件</span>
+                  <div class="flex flex-nowrap gap-1.5">
+                    <button v-for="tag in incidentTags" :key="tag.key" @click="selectedIncident = tag.key" :class="[
+                      'px-2.5 py-1 rounded-full border text-[10px] flex-shrink-0 transition-all whitespace-nowrap',
+                      selectedIncident === tag.key
+                        ? 'bg-[#71C5D5] text-white border-[#71C5D5]'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ]">
+                      {{ tag.label }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </transition>
+
+
             <!-- 頁首分隔線，讓標題與列表之間有更明顯的區隔 -->
             <div class="flex h-px bg-slate-100 m-4"></div>
 
@@ -292,9 +333,9 @@
             <div class="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-1/3
                     rounded-full bg-[#71C5D5] shadow-md transition-transform duration-300" :class="translateClass" />
 
-            <button v-for="(tab, index) in tabs" :key="tab.name" @click="activeTab = index"
+            <button v-for="(tab, index) in tabs" :key="tab.name" @click="activeTab.value = index"
               class="relative z-10 flex-1 flex flex-col items-center gap-0.5 py-1">
-              <Icon :icon="tab.icon" :class="activeTab === index ? 'text-white size-8' : 'text-[#356C77] size-7'" />
+              <Icon :icon="tab.icon" :class="activeTab.value === index ? 'text-white size-8' : 'text-[#356C77] size-7'" />
             </button>
           </div>
         </div>
@@ -318,15 +359,10 @@ import { Icon } from '@iconify/vue';
 import MapPage from './pages/MapPage.vue';
 
 // ==================== API 配置 ====================
-const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
+// const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
+const API_BASE_URL = 'http://localhost:8080/api';
 
-const getUserIdFromUrl = (): number => {
-  const params = new URLSearchParams(window.location.search);
-  const userId = params.get('user_id');
-  return userId ? parseInt(userId, 10) : 1;
-};
-
-const CURRENT_USER_ID = getUserIdFromUrl();
+const CURRENT_USER_ID = 1; // 寫死的使用者 ID，之後再實作登入功能
 
 // ==================== 型別定義 ====================
 interface HelpRequest {
@@ -354,17 +390,22 @@ interface UserLocation {
   lng: number;
 }
 
+
+
 // ==================== API 函式 ====================
 const fetchPosts = async () => {
   try {
     isLoading.value = true;
+
     const params = new URLSearchParams({
       user_id: String(CURRENT_USER_ID)
     });
 
+
     if (userLocation.value) {
       params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
     }
+
 
     if (showNearby.value) {
       params.append('distance', '5');
@@ -373,26 +414,57 @@ const fetchPosts = async () => {
     const response = await fetch(`${API_BASE_URL}/posts?${params}`);
     const data = await response.json();
 
+
     if (data.success) {
-      helpRequests.value = data.posts.map((post: any) => ({
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        location: post.location,
-        locationText: post.location, // 如果後端有提供地址文字可以用，目前用座標
-        contact: post.contact,
-        urgency: post.urgency,
-        timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
-        latitude: post.latitude,
-        longitude: post.longitude,
-        lat: post.latitude,
-        lng: post.longitude,
-        isMine: post.user_id === CURRENT_USER_ID,
-        resolved: post.resolved,
-        distance: post.distance,
-        distance_text: post.distance_text,
-        helper_count: post.helper_count || 0
-      }));
+      const results: HelpRequest[] = [];
+
+      for (const post of data.posts) {
+        let lat = post.latitude;
+        let lng = post.longitude;
+
+        // 保險：如果後端只存了 "lat,lng" 在 location，就自己拆
+        if ((lat == null || lng == null) && typeof post.location === 'string') {
+          const [la, lo] = post.location.split(',').map((s: string) => Number(s.trim()));
+          if (Number.isFinite(la) && Number.isFinite(lo)) {
+            lat = la;
+            lng = lo;
+          }
+        }
+
+        // 預設顯示的地點文字（先用後端給的）
+        let addressText: string = post.location;
+
+        // 有經緯度就反查一次（失敗就維持原本 location）
+        if (lat != null && lng != null) {
+          try {
+            addressText = await fetchAddress(lat, lng);
+          } catch (err) {
+            console.warn('貼文地址轉換失敗，使用原始 location：', err);
+          }
+        }
+
+        results.push({
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          location: post.location,
+          locationText: addressText,
+          contact: post.contact,
+          urgency: post.urgency,
+          timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
+          latitude: lat,
+          longitude: lng,
+          lat,
+          lng,
+          isMine: post.user_id === CURRENT_USER_ID,
+          resolved: post.resolved,
+          distance: post.distance,
+          distance_text: post.distance_text,
+          helper_count: post.helper_count || 0
+        });
+      }
+
+      helpRequests.value = results;
     }
   } catch (error) {
     console.error('載入貼文失敗:', error);
@@ -486,6 +558,30 @@ const resolvePost = async (postId: number) => {
   }
 };
 
+
+// 篩選用 tags
+const districtTags = [
+  { key: 'all', label: '全部' },
+  { key: '大安區', label: '大安區' },
+  { key: '信義區', label: '信義區' },
+  { key: '中山區', label: '中山區' },
+  { key: '內湖區', label: '內湖區' },
+  { key: '文山區', label: '文山區' },
+  // 想再加就繼續放
+];
+
+const incidentTags = [
+  { key: 'all', label: '全部' },
+  { key: '跟蹤', label: '跟蹤' },
+  { key: '性騷擾', label: '性騷擾' },
+  { key: '騷擾', label: '騷擾' },
+  { key: '偷拍', label: '偷拍' },
+  { key: '可疑人物', label: '可疑人物' },
+];
+
+const selectedDistrict = ref<string>('all');
+const selectedIncident = ref<string>('all');
+
 const helpRequest = async (postId: number) => {
   try {
     isHelping.value = true;
@@ -525,7 +621,7 @@ const helpRequest = async (postId: number) => {
 
 // ==================== 狀態管理 ====================
 const selectedRequest = ref<HelpRequest | null>(null);
-const activeTab = ref(0);
+const activeTab = ref(1);
 const formData = reactive({
   title: '',
   content: '',
@@ -536,6 +632,11 @@ const formData = reactive({
 
 const helpRequests = ref<HelpRequest[]>([]);
 const showNearby = ref(true);
+const showFilterBar = ref(false);
+const toggleFilter = () => {
+  showFilterBar.value = !showFilterBar.value;
+};
+
 const userLocation = ref<UserLocation | null>(null);
 const toastMessage = ref<string | null>(null);
 const isModalOpen = ref(false);
@@ -573,30 +674,14 @@ const urgencyRank = (value: number): number => {
 
 const openRequest = async (req: HelpRequest) => {
   try {
-    const params = new URLSearchParams();
-    if (userLocation.value) {
-      params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
-    }
-
-    const response = await fetch(`${API_BASE_URL}/posts/${req.id}?${params}`);
-    const data = await response.json();
-
-    if (data.success) {
-      selectedRequest.value = {
-        ...data.post,
-        timestamp: new Date(data.post.created_at).toLocaleString('zh-TW'),
-        locationText: data.post.location,
-        lat: data.post.latitude,
-        lng: data.post.longitude,
-        isMine: data.post.user_id === CURRENT_USER_ID
-      };
-      isModalOpen.value = true;
-    }
+    selectedRequest.value = { ...req };
+    isModalOpen.value = true;
   } catch (error) {
     console.error('載入貼文詳情失敗:', error);
     showToast('載入失敗，請稍後再試');
   }
 };
+
 
 const closeRequest = () => {
   selectedRequest.value = null;
@@ -607,25 +692,38 @@ const closeRequest = () => {
 onMounted(() => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         userLocation.value = {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
-        // 取得位置後載入貼文
+
+        // ✅ 這裡將經緯度轉成「可讀地址」填進輸入框
+        try {
+          const address = await fetchAddress(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+          formData.location = address;
+          console.log("使用者位置地址:", address);
+        } catch (err) {
+          console.warn("地址轉換失敗:", err);
+          formData.location = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
+        }
+
+        // 再載入貼文列表
         fetchPosts();
       },
-      () => {
+      async () => {
         console.log('無法獲取位置');
-        // 即使沒有位置也載入貼文
-        fetchPosts();
+        await fetchPosts();
       }
     );
   } else {
-    // 即使沒有位置也載入貼文
     fetchPosts();
   }
 });
+
 
 // Toast
 const showToast = (msg: string) => {
@@ -647,6 +745,32 @@ const translateClass = computed(() => {
   if (activeTab.value === 1) return 'translate-x-[95%]';
   return 'translate-x-[190%]';
 });
+
+async function fetchAddress(lat: number, lon: number): Promise<string> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/geo/reverse-geocode?lat=${lat}&lon=${lon}`);
+
+    let data: any = {};
+    try {
+      data = await res.json();
+    } catch {
+      // 後端如果沒給 JSON，就退回座標字串
+      return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    }
+
+    if (!res.ok) {
+      console.warn("reverse-geocode error:", data.error || res.statusText);
+      return data.address || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    }
+
+    return data.address || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+  } catch (err) {
+    console.warn("reverse-geocode fetch failed:", err);
+    return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+  }
+}
+
+
 
 // 計算兩點之間的距離（公里）
 const calculateDistance = (
@@ -700,7 +824,24 @@ watch(activeTab, (newTab) => {
 });
 
 const filteredRequests = computed(() => {
-  return helpRequests.value;
+  let list = helpRequests.value;
+
+  // 行政區篩選：看 locationText 有沒有包含選取的字
+  if (selectedDistrict.value !== 'all') {
+    list = list.filter(req =>
+      req.locationText?.includes(selectedDistrict.value)
+    );
+  }
+
+  // 事件篩選：從標題 / 內容裡面找關鍵字
+  if (selectedIncident.value !== 'all') {
+    list = list.filter(req =>
+      req.title?.includes(selectedIncident.value) ||
+      req.content?.includes(selectedIncident.value)
+    );
+  }
+
+  return list;
 });
 
 const markAsResolved = async (id: number) => {
@@ -732,5 +873,25 @@ const markAsResolved = async (id: number) => {
 .card-fade-leave-to {
   opacity: 0;
   transform: translateY(6px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.25s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 </style>
