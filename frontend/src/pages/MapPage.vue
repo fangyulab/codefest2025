@@ -14,7 +14,7 @@
 
   <!-- 地圖區 -->
   <div
-    class="relative w-full h-[360px] sm:h-[420px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100"
+    class="relative w-full h-[82vh] sm:h-[420px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100"
   >
     <!-- Leaflet 掛載點 -->
     <div ref="mapContainer" class="w-full h-full"></div>
@@ -123,15 +123,17 @@
   </div>
 
   <!-- 下方距離列表 -->
-  <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">
+  <!-- <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-3">
     <div v-if="userLocation && helpRequests.length > 0" class="space-y-2">
       <p class="text-xs font-medium text-slate-700">
         求助地點與距離（依照發布順序顯示）
       </p>
+      舊
       <div
         v-for="req in helpRequests"
         :key="req.id"
         class="bg-white rounded-xl px-3 py-2 border border-slate-100 text-[10px]"
+        @click="openRequestFromMap(req)"
       >
         <p class="font-semibold text-slate-900 text-xs mb-0.5">
           {{ req.title }}
@@ -156,7 +158,31 @@
           公里
         </p>
       </div>
-    </div>
+
+      <article v-for="req in helpRequests" :key="req.id" :class="[
+        'rounded-3xl px-5 py-4 border transition-all cursor-pointer leading-relaxed flex flex-col gap-1',
+        req.isMine
+          ? 'bg-white border-[#B4E2EA] border-[1.5px]'
+          : 'bg-[#DBF1F5] border-none'
+      ]" @click="openRequest(req)" @keydown.enter.prevent="openRequest(req)" role="button" tabindex="0">
+        <h3 class="font-semibold text-sm text-slate-900 mb-3">
+          {{ req.title }}
+        </h3>
+
+        <div class="flex flex-col text-[10px] text-slate-500">
+          <div class="flex items-center gap-1">
+            <Icon icon="fluent:location-20-filled" class="size-4" :class="[req.urgency === 1 ? 'text-[#D45251]' : '',
+            req.urgency === 2 ? 'text-[#FD853A]' : '',
+            req.urgency === 3 ? 'text-[#F5BA4B]' : '']" />
+            <span>{{ req.locationText }}</span>
+          </div>
+          <div class="text-[9px] text-slate-400 mt-0.5">
+            {{ req.timestamp }}
+          </div>
+        </div>
+      </article>
+      
+    </div> 
 
     <div v-else-if="helpRequests.length === 0" class="text-[10px] text-slate-500 text-center py-2">
       尚無求助資料可顯示距離，請先於「發布求助」新增一筆資訊。
@@ -165,7 +191,13 @@
     <div v-else class="text-[10px] text-slate-500 text-center py-2">
       正在嘗試取得您的位置…
     </div>
-  </div>
+    <transition name="fade-up">
+      <div v-if="toastMessage"
+        class="fixed bottom-20 left-1/2 -translate-x-1/2 px-4 py-2.5 bg-[#356C77] text-white text-xs rounded-full shadow-lg z-50">
+        {{ toastMessage }}
+      </div>
+    </transition>
+  </div> -->
 </div>
 </template>
 
@@ -341,26 +373,25 @@ const drawRouteToRequest = (req: HelpRequest) => {
 
 // 開啟詳情（marker 點擊時）
 const openRequestFromMap = (req: HelpRequest) => {
-let distanceKm: number | undefined;
+  let distanceKm: number | undefined;
 
-if (props.userLocation) {
-  distanceKm = calculateDistance(
-    props.userLocation.lat,
-    props.userLocation.lng,
-    req.lat,
-    req.lng
-  );
-}
+  if (props.userLocation) {
+    distanceKm = calculateDistance(
+      props.userLocation.lat,
+      props.userLocation.lng,
+      req.lat,
+      req.lng
+    );
+  }
 
+  selectedRequest.value = {
+    ...req,
+    distanceKm
+  };
+  };
 
-selectedRequest.value = {
-  ...req,
-  distanceKm
-};
-};
-
-const closeSelectedRequest = () => {
-selectedRequest.value = null;
+  const closeSelectedRequest = () => {
+  selectedRequest.value = null;
 };
 
 // 更新所有求助 marker
@@ -699,6 +730,22 @@ if (mapInstance) {
   lastBounds = null;
 }
 });
+
+const isModalOpen = ref(false);
+const toastMessage = ref<string | null>(null);
+  let toastTimer: number | null = null;
+
+const openRequest = async (req: HelpRequest) => {
+  emit('open-request', req);
+};
+
+const showToast = (msg: string) => {
+  toastMessage.value = msg;
+  if (toastTimer) window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => {
+    toastMessage.value = null;
+  }, 1800);
+};
 </script>
 
 

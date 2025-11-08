@@ -93,7 +93,7 @@
 
               <div class=" text-xs font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                 <div class="flex items-center gap-2">
-                  <Icon icon="si:alert-fill" class="size-5" />
+                  <Icon icon="material-symbols:tag-rounded" class="size-5" />
                   事件類別
                 </div>
                 <div class="flex flex-wrap gap-1.5">
@@ -252,12 +252,12 @@
       <transition name="fade-up">
         <div
           v-if="isModalOpen"
-          class="fixed inset-0 z-2000 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
+          class="fixed inset-0 z-2000 flex items-center justify-center bg-slate-900/40"
           @click.self="closeRequest"
         >
           <div
             :class="[
-              'w-full max-w-md mx-4 rounded-3xl shadow-xl relative border transition-all',
+              ' mx-4 rounded-3xl relative border transition-all max-w-[80vw]',
               selectedRequest && selectedRequest.isMine
                 ? 'bg-white border-[#B4E2EA]'
                 : 'bg-[#DBF1F5] border-none'
@@ -287,7 +287,7 @@
 
                 <!-- 地點 / 距離 -->
                 <section
-                  class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]"
+                  class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px] flex flex-col gap-1"
                 >
                   <div class="flex items-start gap-2">
                     <Icon
@@ -300,7 +300,6 @@
                       ]"
                     />
                     <div class="leading-relaxed">
-                      <span class="font-medium text-slate-800">地點：</span>
                       <span class="text-slate-700">
                         {{ selectedRequest.locationText }}
                       </span>
@@ -312,7 +311,7 @@
                     class="flex items-center gap-2 pl-6 text-[11px]"
                   >
                     <span
-                      class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#71C5D5] text-white font-medium"
                     >
                       {{ selectedRequest.distance_text }}
                     </span>
@@ -355,7 +354,7 @@
               <!-- ✅ 自己的貼文：標記為已解決 -->
               <div
                 v-if="selectedRequest.isMine"
-                class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-white/30 backdrop-blur-sm rounded-b-3xl"
+                class="mt-8 -mb-6 -mx-6 border-2 border-slate-300/40 bg-white/30 rounded-b-3xl"
               >
                 <button
                   @click="markAsResolved(selectedRequest.id)"
@@ -369,7 +368,7 @@
               <!-- 別人的貼文：我要幫助他 + Google Map -->
               <div
                 v-else
-                class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-[#DBF1F5]/50 backdrop-blur-sm rounded-b-3xl"
+                class="mt-8 -mb-6 -mx-6 border-2 border-slate-300/40 bg-[#DBF1F5]/50 rounded-b-3xl"
               >
                 <div class="flex w-full">
                   <button
@@ -590,9 +589,55 @@ const createPost = async () => {
 
     if (!userLocation.value) {
       showToast('無法取得您的位置，請確認已允許定位');
+      isSubmitting.value = false;
       return;
     }
 
+    if (!formData.incidentLabels || formData.incidentLabels.length === 0) {
+      try {
+        const res = await fetch('/api/classify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            content: formData.content
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          // 假設後端回傳格式 example：
+          // { success: true, label: "harassment", confidence: 0.93, labels: ["harassment"] }
+
+          const autoLabels: string[] = [];
+
+          // 多標籤
+          if (Array.isArray(data.labels) && data.labels.length > 0) {
+            autoLabels.push(...data.labels);
+          }
+
+          // 單一 label
+          if (data.label && !autoLabels.includes(data.label)) {
+            autoLabels.push(data.label);
+          }
+
+          // 如果有拿到結果，就塞進 formData.incidentLabels
+          if (autoLabels.length > 0) {
+            formData.incidentLabels = autoLabels;
+          }
+        } else {
+          console.warn('分類失敗，改用使用者輸入的標籤或空值', data);
+        }
+      } catch (err) {
+        console.error('分類 API 錯誤：', err);
+        // 不擋發文流程，只是沒有自動標籤
+      }
+    }
+
+    // 3️⃣ 發送真正的建立貼文 API
     const response = await fetch(`${API_BASE_URL}/posts`, {
       method: 'POST',
       headers: {
@@ -606,7 +651,7 @@ const createPost = async () => {
         locationText: formData.locationText,
         urgency: formData.urgency,
         contact: formData.contact.trim(),
-        labels: formData.incidentLabels
+        labels: formData.incidentLabels || []  // 後端 incident label 用這個欄位收
       })
     });
 
@@ -615,7 +660,7 @@ const createPost = async () => {
     if (data.success) {
       showToast('求助資訊已發布');
 
-      // 清空表單
+      // 4️⃣ 清空表單
       formData.title = '';
       formData.content = '';
       formData.location = '';
@@ -624,10 +669,8 @@ const createPost = async () => {
       formData.urgency = 0;
       formData.incidentLabels = [];
 
-      // 重新載入貼文列表
+      // 5️⃣ 重新載入貼文＆切到列表
       await fetchPosts();
-
-      // 切換到列表頁
       activeTab.value = 1;
     } else {
       showToast(data.message || '發布失敗，請稍後再試');
@@ -639,6 +682,7 @@ const createPost = async () => {
     isSubmitting.value = false;
   }
 };
+
 
 const resolvePost = async (postId: number) => {
   try {
@@ -1010,13 +1054,17 @@ const toggleIncidentLabel = (key: string) => {
 /* Toast 動畫 */
 .fade-up-enter-active,
 .fade-up-leave-active {
-  transition: all 0.2s ease-out;
+  transition: all 0.3s ease;
 }
-
 .fade-up-enter-from,
 .fade-up-leave-to {
   opacity: 0;
-  transform: translate(-50%, 8px);
+  transform: translateY(10px);
+}
+.fade-up-enter-to,
+.fade-up-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* 卡片列表淡入淡出 */
