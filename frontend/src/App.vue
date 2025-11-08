@@ -136,100 +136,6 @@
               </div>
             </article>
           </div>
-          <!-- 詳細內容彈窗 -->
-          <transition name="fade">
-            <div v-if="selectedRequest" class="fixed inset-0 z-50" role="dialog" aria-modal="true"
-              aria-labelledby="req-title">
-              <!-- 背景遮罩 -->
-              <div class="absolute inset-0 bg-black/40" @click="closeRequest"></div>
-
-              <!-- 內容面板：手機底部抽屜、桌機置中卡片 -->
-              <div class="absolute inset-x-0 bottom-0 md:inset-auto md:top-1/2 md:left-1/2
-             md:-translate-x-1/2 md:-translate-y-1/2 md:w-[680px]
-             bg-white rounded-t-2xl md:rounded-2xl shadow-xl
-             p-6 max-h-[85vh] overflow-y-auto">
-                <!-- 標題列 -->
-                <div class="flex items-start justify-between gap-4 mb-4">
-                  <h3 id="req-title" class="text-lg sm:text-xl font-semibold text-slate-900">
-                    {{ selectedRequest.title }}
-                  </h3>
-                  <button @click="closeRequest" class="rounded-lg px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200">
-                    關閉
-                  </button>
-                </div>
-
-                <!-- 重要資訊列 -->
-                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-600 mb-3">
-                  <div class="flex items-center gap-1">
-                    <MapPin class="w-4 h-4" />
-                    <span>{{ selectedRequest.location }}</span>
-                  </div>
-                  <span class="text-slate-300">•</span>
-                  <span class="text-slate-500">{{ selectedRequest.timestamp }}</span>
-
-                  <template v-if="selectedRequest.distanceKm !== undefined">
-                    <span class="text-slate-300">•</span>
-                    <span>距離約 {{ selectedRequest.distanceKm.toFixed(1) }} 公里</span>
-                  </template>
-
-                  <template v-if="selectedRequest.urgency">
-                    <span class="text-slate-300">•</span>
-                    <span class="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-red-600">
-                      緊急：{{ selectedRequest.urgency }}
-                    </span>
-                  </template>
-
-                  <template v-if="selectedRequest.label">
-                    <span class="text-slate-300">•</span>
-                    <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-indigo-600">
-                      {{ selectedRequest.label }}
-                    </span>
-                  </template>
-                </div>
-
-                <!-- 內文 -->
-                <div v-if="selectedRequest.content" class="prose prose-sm max-w-none text-slate-800">
-                  <p class="whitespace-pre-line">{{ selectedRequest.content }}</p>
-                </div>
-
-                <!-- 聯絡方式 -->
-                <div v-if="selectedRequest.contact" class="mt-6">
-                  <div class="text-xs text-slate-500 mb-1">聯絡方式</div>
-                  <div class="rounded-lg border border-slate-200 p-3 break-words text-slate-800 bg-slate-50">
-                    {{ selectedRequest.contact }}
-                  </div>
-                </div>
-
-                <!-- 行動按鈕 -->
-                <div class="mt-6 flex items-center justify-end gap-3">
-                  <button @click="closeRequest" class="rounded-lg px-4 py-2 bg-slate-100 hover:bg-slate-200">
-                    先看看
-                  </button>
-                  <a v-if="selectedRequest.contact && selectedRequest.contact.startsWith('tel:')"
-                    :href="selectedRequest.contact"
-                    class="rounded-lg px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700">
-                    直接撥打
-                  </a>
-                  <button v-else class="rounded-lg px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700">
-                    我可以幫忙
-                  </button>
-                </div>
-              </div>
-            </div>
-          </transition>
-
-          <!-- 淡入淡出動畫 -->
-          <style>
-            .fade-enter-active,
-            .fade-leave-active {
-              transition: opacity .15s ease
-            }
-
-            .fade-enter-from,
-            .fade-leave-to {
-              opacity: 0
-            }
-          </style>
         </section>
 
         <!-- Tab 3: 地圖定位 -->
@@ -296,6 +202,84 @@
       </div>
     </main>
 
+    <!-- 求助詳細內容彈窗（先做空白卡片） -->
+    <transition name="fade-up">
+      <div v-if="isModalOpen"
+        class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+        <div class="w-full max-w-md mx-4 rounded-2xl bg-white shadow-xl border border-slate-200 p-5 relative">
+          <!-- 關閉按鈕 -->
+          <button class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
+            @click="closeRequest" aria-label="close">
+            <Icon icon="mdi:close" class="w-5 h-5 text-slate-400" />
+          </button>
+
+          <!-- 內容區：顯示被點擊的求助 -->
+          <div v-if="selectedRequest" class="pt-6 space-y-4 text-sm text-slate-800">
+            <!-- 標題 -->
+            <h3 class="text-base font-semibold text-slate-900 leading-snug">
+              {{ selectedRequest.title }}
+            </h3>
+
+            <!-- 求助內容 -->
+            <p class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700">
+              {{ selectedRequest.content }}
+            </p>
+
+            <!-- 地點 / 距離 / 時間 -->
+            
+              <div class="flex items-start gap-1.5">
+                <MapPin class="w-3.5 h-3.5 mt-0.5 text-indigo-500" />
+                <div>
+                  <span class="font-medium text-slate-800">地點：</span>
+                  <span class="text-slate-700">
+                    {{ selectedRequest.location }}
+                  </span>
+                </div>
+              </div>
+
+              <div v-if="userLocation" class="flex items-center gap-1.5 text-slate-600">
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-medium">
+                  約
+                  {{
+                    calculateDistance(
+                      userLocation.lat,
+                      userLocation.lng,
+                      selectedRequest.lat,
+                      selectedRequest.lng
+                  ).toFixed(2)
+                  }}
+                  公里內
+                </span>
+              </div>
+
+              <div class="text-slate-500">
+                <span class="font-medium">發布時間：</span>
+                <span>{{ selectedRequest.timestamp }}</span>
+              </div>
+
+            <!-- 聯絡方式（如果有填） -->
+            <div v-if="selectedRequest.contact"
+              class="bg-white border border-slate-100 rounded-xl p-3 text-[11px] space-y-1">
+              <p class="font-medium text-slate-800">聯絡方式</p>
+              <p class="text-slate-700 break-words">
+                {{ selectedRequest.contact }}
+              </p>
+              <p class="text-[10px] text-slate-400">
+                請自行斟酌聯絡與資訊安全，避免提供過多個資。
+              </p>
+            </div>
+          </div>
+
+          <!-- 理論上不太會看到，但保險加一個 fallback -->
+          <div v-else class="h-32 flex items-center justify-center text-xs text-slate-400">
+            尚未選取任何求助貼文
+          </div>
+        </div>
+      </div>
+    </transition>
+
+
     <!-- 底部 Tab 導航 -->
     <nav
       class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-200 shadow-[0_-4px_12px_rgba(15,23,42,0.04)]">
@@ -332,6 +316,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
 import { MapPin, Users, Map, Send } from 'lucide-vue-next';
+import { Icon } from '@iconify/vue';
 
 interface HelpRequest {
   id: number;
@@ -349,7 +334,7 @@ interface UserLocation {
   lng: number;
 }
 
-const activeTab = ref (0);
+const activeTab = ref(0);
 const formData = reactive({
   title: '',
   content: '',
@@ -361,6 +346,9 @@ const showNearby = ref(false);
 const userLocation = ref<UserLocation | null>(null);
 const toastMessage = ref<string | null>(null);
 let toastTimer: number | null = null;
+
+const isModalOpen = ref(false);
+const selectedRequest = ref<HelpRequest | null>(null);
 
 // 取得使用者位置
 onMounted(() => {
@@ -446,6 +434,9 @@ const toggleNearby = () => {
   showNearby.value = !showNearby.value;
 };
 
+
+
+
 // 過濾顯示的求助資訊
 const filteredRequests = computed(() => {
   if (showNearby.value && userLocation.value) {
@@ -468,6 +459,20 @@ const tabs = [
   { name: '求助資訊', icon: Users },
   { name: '地圖定位', icon: Map }
 ];
+
+
+// 點擊貼文開啟彈窗
+const openRequest = (req: HelpRequest) => {
+  selectedRequest.value = req;
+  isModalOpen.value = true;
+};
+
+// 關閉彈窗
+const closeRequest = () => {
+  isModalOpen.value = false;
+  selectedRequest.value = null;
+};
+
 </script>
 
 <style scoped>
