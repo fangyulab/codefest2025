@@ -177,6 +177,9 @@ import myLocationIconUrl from '../assets/map_icon_findmylocation.svg';
 import 'leaflet/dist/leaflet.css';
 import addIcon from '../assets/add_grey.svg';
 import removeIcon from '../assets/remove_grey.svg';
+import 'leaflet-routing-machine';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+
 
 interface HelpRequest {
 id: number;
@@ -237,6 +240,7 @@ const emit = defineEmits<{
 
 const mapContainer = ref<HTMLDivElement | null>(null);
 let mapInstance: L.Map | null = null;
+let routeControl: any = null;
 let markersLayer: L.LayerGroup | null = null;
 let policeLayer: L.LayerGroup | null = null;
 let userMarker: L.Marker | null = null;
@@ -296,6 +300,44 @@ if (!userMarker) {
   userMarker.setLatLng(latlng);
 }
 };
+
+const drawRouteToRequest = (req: HelpRequest) => {
+  if (!mapInstance) return;
+  if (!props.userLocation) {
+    console.warn('尚未取得使用者位置，無法規劃路線');
+    return;
+  }
+
+  const from = L.latLng(props.userLocation.lat, props.userLocation.lng);
+  const to = L.latLng(req.lat, req.lng);
+
+  // 如果之前有路線，先移除
+  if (routeControl) {
+    mapInstance.removeControl(routeControl);
+    routeControl = null;
+  }
+
+  // 使用 Leaflet Routing Machine + OSRM
+  routeControl = (L as any).Routing.control({
+    waypoints: [from, to],
+    lineOptions: {
+      styles: [
+        {
+          color: '#2563eb', // 路線顏色（藍）
+          opacity: 0.9,
+          weight: 5
+        }
+      ]
+    },
+    addWaypoints: false,          // 不讓使用者拖 endpoints
+    routeWhileDragging: false,
+    draggableWaypoints: false,
+    fitSelectedRoutes: true,      // 自動縮放到路線範圍
+    show: false,                  // 不顯示預設左側控制面板
+    createMarker: () => null      // 不額外產生 RoutingMachine 自己的 marker
+  }).addTo(mapInstance);
+};
+
 
 // 開啟詳情（marker 點擊時）
 const openRequestFromMap = (req: HelpRequest) => {
@@ -377,7 +419,8 @@ props.helpRequests.forEach((req) => {
 
   // ✅ 點 marker / popup 時，通知 App.vue 開同一個詳細彈窗
   marker.on('click', () => {
-    emit('open-request', req);
+    drawRouteToRequest(req);   // 🔹 畫出「我 → 該求助點」路線
+    emit('open-request', req); // 保留原本打開詳情的行為
   });
 
 
