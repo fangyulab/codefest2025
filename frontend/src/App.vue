@@ -9,7 +9,7 @@
           <!-- 內容卡片 -->
 
           <!-- Tab 1: 發布求助表單 -->
-          <section v-if="activeTab === 0" class="flex flex-col gap-3 space-y-5">
+          <section v-if="activeTab === 0" class="flex flex-col gap-3 space-y-5 ">
             <div class="flex flex-wrap items-center justify-between gap-3 m-8">
               <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
                 <Icon icon="iconamoon:edit-fill" class="size-6 text-[#468D9B]" />
@@ -18,7 +18,7 @@
             </div>
             <div class="flex h-px bg-slate-100 m-4"></div>
 
-            <div class="grid gap-4">
+            <div class="grid gap-4 px-4">
               <div class="text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <Icon icon="tabler:sos" class="size-5" />
@@ -123,6 +123,8 @@
               </div>
             </div>
 
+            <div class="flex h-px bg-slate-100 m-4"></div>
+
             <!-- 篩選 icon -->
             <button @click="toggleFilter" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
               <Icon icon="mi:filter" class="w-5 h-5" />
@@ -163,10 +165,6 @@
               </div>
             </transition>
 
-
-            <!-- 頁首分隔線，讓標題與列表之間有更明顯的區隔 -->
-            <div class="flex h-px bg-slate-100 m-4"></div>
-
             <!-- 載入中 -->
             <div v-if="isLoading" class="text-center py-10 px-6 text-slate-400">
               <Icon icon="svg-spinners:ring-resize" class="mx-auto mb-4 w-12 h-12" />
@@ -181,7 +179,7 @@
             </div>
 
             <!-- 列表 -->
-            <div v-else class="flex flex-col gap-3 px-4 py-6">
+            <div v-else class="flex flex-col gap-3 px-4">
               <article v-for="req in filteredRequests" :key="req.id" :class="[
                 'rounded-3xl px-5 py-4 border transition-all cursor-pointer leading-relaxed flex flex-col gap-1',
                 req.isMine
@@ -333,9 +331,9 @@
             <div class="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-1/3
                     rounded-full bg-[#71C5D5] shadow-md transition-transform duration-300" :class="translateClass" />
 
-            <button v-for="(tab, index) in tabs" :key="tab.name" @click="activeTab.value = index"
+            <button v-for="(tab, index) in tabs" :key="tab.name" @click="activeTab = index"
               class="relative z-10 flex-1 flex flex-col items-center gap-0.5 py-1">
-              <Icon :icon="tab.icon" :class="activeTab.value === index ? 'text-white size-8' : 'text-[#356C77] size-7'" />
+              <Icon :icon="tab.icon" :class="activeTab === index ? 'text-white size-8' : 'text-[#356C77] size-7'" />
             </button>
           </div>
         </div>
