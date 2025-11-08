@@ -40,19 +40,19 @@
           <span>我的位置</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="inline-flex w-3 h-3 rounded-full bg-red-500 border border-white shadow"></span>
+          <span class="inline-flex w-3 h-3 rounded-full border border-white shadow" style="background-color: #D45251;"></span>
           <span>極度緊急</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="inline-flex w-3 h-3 rounded-full bg-orange-500 border border-white shadow"></span>
+          <span class="inline-flex w-3 h-3 rounded-full border border-white shadow" style="background-color: #FD853A;"></span>
           <span>高度緊急</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="inline-flex w-3 h-3 rounded-full bg-yellow-400 border border-white shadow"></span>
+          <span class="inline-flex w-3 h-3 rounded-full border border-white shadow" style="background-color: #F5BA4B;"></span>
           <span>中度緊急</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="inline-flex w-3 h-3 rounded-full bg-indigo-500 border border-white shadow"></span>
+          <span class="inline-flex w-3 h-3 rounded-full border border-white shadow" style="background-color: #738995;"></span>
           <span>未標記</span>
         </div>
         <p class="pt-1 border-t border-slate-100 text-[10px] text-slate-400">
@@ -93,7 +93,10 @@
             {{ req.title }}
           </p>
           <p class="flex items-center gap-1 text-slate-600 mb-0.5">
-            <MapPin class="w-3 h-3 text-indigo-500" />
+            <MapPin
+                class="w-3 h-3"
+                :style="{ color: getUrgencyColor(req.urgency) }"
+            />
             {{ req.location }}
           </p>
           <p class="text-slate-500">
@@ -127,8 +130,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { MapPin, Map } from 'lucide-vue-next';
 import L from 'leaflet';
-// 若還沒在 main.ts 引入，也可以這裡暫時加：
-// import 'leaflet/dist/leaflet.css';
+import myLocationIconUrl from '../assets/map_icon_findmylocation.svg';
 
 interface HelpRequest {
   id: number;
@@ -148,9 +150,25 @@ interface UserLocation {
   lng: number;
 }
 
+
 interface SelectedHelpRequest extends HelpRequest {
   distanceKm?: number;
 }
+
+// 依照緊急程度代碼回傳顏色（和 App.vue / legend 同一組）
+const getUrgencyColor = (urgency?: string) => {
+  switch (urgency) {
+    case '1': // 極度緊急
+      return '#D45251';
+    case '2': // 高度緊急
+      return '#FD853A';
+    case '3': // 中度緊急
+      return '#F5BA4B';
+    default:  // 未標記
+      return '#738995';
+  }
+};
+
 
 const props = defineProps<{
   helpRequests: HelpRequest[];
@@ -197,28 +215,23 @@ const updateUserMarker = () => {
 
   const latlng = L.latLng(props.userLocation.lat, props.userLocation.lng);
 
-  const icon = L.divIcon({
-    className: 'custom-user-icon',
-    html: `
-      <div style="
-        width:20px;
-        height:20px;
-        border-radius:50%;
-        background-color:#10b981;
-        border:2px solid white;
-        box-shadow:0 1px 4px rgba(15,23,42,0.5);
-      "></div>
-    `,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+  // 用 SVG 檔當作 icon
+  const icon = L.icon({
+    iconUrl: myLocationIconUrl,
+    // 這兩個數字請依照 SVG 實際大小微調
+    iconSize: [32, 32],      // 寬、高（px）
+    iconAnchor: [16, 16],    // 圖片中「尖端 / 圓心」對應的位置
+    popupAnchor: [0, -16]    // 之後如果有 popup，可以從 icon 上方冒出
   });
 
   if (!userMarker) {
     userMarker = L.marker(latlng, { icon }).addTo(mapInstance);
   } else {
+    userMarker.setIcon(icon);    // 確保 icon 也更新
     userMarker.setLatLng(latlng);
   }
 };
+
 
 // 開啟詳情（marker 點擊時）
 const openRequestFromMap = (req: HelpRequest) => {
@@ -257,11 +270,9 @@ const updateHelpMarkers = () => {
   const bounds = L.latLngBounds([]);
 
   props.helpRequests.forEach((req) => {
-    // 根據 urgency 決定顏色
-    let color = '#6366f1'; // default 紫色（未標記）
-    if (req.urgency === '高') color = '#ef4444';       // 紅
-    else if (req.urgency === '中') color = '#f97316';  // 橘
-    else if (req.urgency === '低') color = '#facc15';  // 黃
+  // 根據 urgency 決定顏色（1 / 2 / 3 對應紅 / 橘 / 黃）
+  const color = getUrgencyColor(req.urgency);
+
 
     const icon = L.divIcon({
       className: 'custom-help-icon',

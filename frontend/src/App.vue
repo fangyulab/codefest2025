@@ -207,9 +207,11 @@
                   </template>
 
                   <template v-if="selectedRequest.urgency">
-                    <span class="text-slate-300">•</span>
-                    <span class="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-red-600">
-                      緊急：{{ selectedRequest.urgency }}
+                    <span
+                      class="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium"
+                      :class="urgencyPillClass(selectedRequest.urgency)"
+                    >
+                      緊急：{{ formatUrgency(selectedRequest.urgency) }}
                     </span>
                   </template>
 
@@ -379,6 +381,32 @@ interface UserLocation {
   lng: number;
 }
 
+const formatUrgency = (value?: string) => {
+  switch (value) {
+    case '1':
+      return '極度緊急';
+    case '2':
+      return '高度緊急';
+    case '3':
+      return '中度緊急';
+    default:
+      return '未標記';
+  }
+};
+
+const urgencyPillClass = (value?: string) => {
+  switch (value) {
+    case '1':
+      return 'bg-red-50 text-red-600';
+    case '2':
+      return 'bg-orange-50 text-orange-600';
+    case '3':
+      return 'bg-amber-50 text-amber-600';
+    default:
+      return 'bg-slate-100 text-slate-500';
+  }
+};
+
 const activeTab = ref (0);
 const formData = reactive({
   title: '',
@@ -396,23 +424,24 @@ let toastTimer: number | null = null;
 const urgencyOptions = [
   {
     value: '1',
-    label: '高（需要立即協助）',
+    label: '極度緊急',
     activeClass: 'bg-red-50 text-red-600 border-red-200 shadow-sm',
-    dotClass: 'bg-red-500'
+    dotClass: 'bg-[#D45251]'
   },
   {
     value: '2',
-    label: '中（盡快協助）',
+    label: '高度緊急',
     activeClass: 'bg-orange-50 text-orange-600 border-orange-200 shadow-sm',
-    dotClass: 'bg-orange-500'
+    dotClass: 'bg-[#FD853A]'
   },
   {
     value: '3',
-    label: '低（一般關懷）',
-    activeClass: 'bg-emerald-50 text-emerald-600 border-emerald-200 shadow-sm',
-    dotClass: 'bg-emerald-500'
+    label: '中度緊急',
+    activeClass: 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm',
+    dotClass: 'bg-[#F5BA4B]'
   }
 ];
+
 
 // 取得使用者位置
 onMounted(() => {
