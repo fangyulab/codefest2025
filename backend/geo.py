@@ -1,8 +1,6 @@
-# geo.py
 from flask import Blueprint, request, jsonify
 from geopy.geocoders import Nominatim
 
-# 一定要有 url_prefix="/geo"
 geo_bp = Blueprint("geo", __name__)
 
 geolocator = Nominatim(user_agent="safecity_app", timeout=5)

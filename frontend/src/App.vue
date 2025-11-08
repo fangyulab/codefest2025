@@ -343,34 +343,51 @@ interface UserLocation {
 const fetchPosts = async () => {
   try {
     isLoading.value = true;
+
     const params = new URLSearchParams({
       user_id: String(CURRENT_USER_ID)
     });
-    
+
     if (userLocation.value) {
       params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
     }
-    
+
     if (showNearby.value) {
       params.append('distance', '5');
     }
 
     const response = await fetch(`${API_BASE_URL}/posts?${params}`);
     const data = await response.json();
-    
+
     if (data.success) {
-      helpRequests.value = await Promise.all(
-      data.posts.map(async (post: any) => {
-        let addressText = post.location;
-        try {
-          if (post.latitude && post.longitude) {
-            addressText = await fetchAddress(post.latitude, post.longitude);
+      const results: HelpRequest[] = [];
+
+      for (const post of data.posts) {
+        let lat = post.latitude;
+        let lng = post.longitude;
+
+        // 保險：如果後端只存了 "lat,lng" 在 location，就自己拆
+        if ((lat == null || lng == null) && typeof post.location === 'string') {
+          const [la, lo] = post.location.split(',').map((s: string) => Number(s.trim()));
+          if (Number.isFinite(la) && Number.isFinite(lo)) {
+            lat = la;
+            lng = lo;
           }
-        } catch (err) {
-          console.warn("地址轉換失敗:", err);
         }
 
-        return {
+        // 預設顯示的地點文字（先用後端給的）
+        let addressText: string = post.location;
+
+        // 有經緯度就反查一次（失敗就維持原本 location）
+        if (lat != null && lng != null) {
+          try {
+            addressText = await fetchAddress(lat, lng);
+          } catch (err) {
+            console.warn('貼文地址轉換失敗，使用原始 location：', err);
+          }
+        }
+
+        results.push({
           id: post.id,
           title: post.title,
           content: post.content,
@@ -379,19 +396,19 @@ const fetchPosts = async () => {
           contact: post.contact,
           urgency: post.urgency,
           timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
-          latitude: post.latitude,
-          longitude: post.longitude,
-          lat: post.latitude,
-          lng: post.longitude,
+          latitude: lat,
+          longitude: lng,
+          lat,
+          lng,
           isMine: post.user_id === CURRENT_USER_ID,
           resolved: post.resolved,
           distance: post.distance,
           distance_text: post.distance_text,
           helper_count: post.helper_count || 0
-        };
-      })
-    );
+        });
+      }
 
+      helpRequests.value = results;
     }
   } catch (error) {
     console.error('載入貼文失敗:', error);
@@ -552,25 +569,38 @@ const closeRequest = () => {
 onMounted(() => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         userLocation.value = {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
-        // 取得位置後載入貼文
+
+        // ✅ 這裡將經緯度轉成「可讀地址」填進輸入框
+        try {
+          const address = await fetchAddress(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+          formData.location = address;
+          console.log("使用者位置地址:", address);
+        } catch (err) {
+          console.warn("地址轉換失敗:", err);
+          formData.location = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
+        }
+
+        // 再載入貼文列表
         fetchPosts();
       },
-      () => {
+      async () => {
         console.log('無法獲取位置');
-        // 即使沒有位置也載入貼文
-        fetchPosts();
+        await fetchPosts();
       }
     );
   } else {
-    // 即使沒有位置也載入貼文
     fetchPosts();
   }
 });
+
 
 // Toast
 const showToast = (msg: string) => {
@@ -593,17 +623,30 @@ const translateClass = computed(() => {
   return 'translate-x-[190%]';
 });
 
-async function fetchAddress(lat: number, lon: number) {
-  const res = await fetch(`${API_BASE_URL}/geo/reverse-geocode?lat=${lat}&lon=${lon}`)
+async function fetchAddress(lat: number, lon: number): Promise<string> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/geo/reverse-geocode?lat=${lat}&lon=${lon}`);
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.error || "API error")
+    let data: any = {};
+    try {
+      data = await res.json();
+    } catch {
+      // 後端如果沒給 JSON，就退回座標字串
+      return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    }
+
+    if (!res.ok) {
+      console.warn("reverse-geocode error:", data.error || res.statusText);
+      return data.address || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    }
+
+    return data.address || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+  } catch (err) {
+    console.warn("reverse-geocode fetch failed:", err);
+    return `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
   }
-
-  const data = await res.json()
-  return data.address
 }
+
 
 
 // 計算兩點之間的距離（公里）
