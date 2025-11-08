@@ -103,6 +103,7 @@ def create_post():
         "content": data["content"],
         "labels": data.get("labels", []),
         "location": data["location"],
+        "locationText": data["locationText"],
         "latitude": lat,
         "longitude": lon,
         "urgency": data["urgency"],
