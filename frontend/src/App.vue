@@ -319,27 +319,29 @@
                 </section>
 
                 <!-- 求助內容 -->
-                <section class="space-y-1">
-                  <p
-                    class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700"
-                  >
-                    {{ selectedRequest.content }}
-                  </p>
-                </section>
+                <div class="gap-1">
+                  <section class="space-y-1">
+                    <p
+                      class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700"
+                    >
+                      {{ selectedRequest.content }}
+                    </p>
+                  </section>
 
-                <!-- 聯絡方式 -->
-                <div
-                  v-if="selectedRequest.contact"
-                  class="flex flex-wrap items-center gap-2 text-[13px] text-slate-700"
-                >
-                  <p class="font-medium text-slate-800 m-0">聯絡方式：</p>
-                  <p class="break-words">
-                    {{ selectedRequest.contact }}
+                  <!-- 聯絡方式 -->
+                  <div
+                    v-if="selectedRequest.contact"
+                    class="flex flex-wrap items-center gap-2 text-[13px] text-slate-700"
+                  >
+                    <p class="font-medium text-slate-800 m-0">聯絡方式：</p>
+                    <p class="break-words">
+                      {{ selectedRequest.contact }}
+                    </p>
+                  </div>
+                  <p class="text-[10px] text-slate-400 mt-1">
+                    *請自行斟酌聯絡與資訊安全，注意自身安全！
                   </p>
                 </div>
-                <p class="text-[10px] text-slate-400 mt-1">
-                  請自行斟酌聯絡與資訊安全，避免提供過多個資。
-                </p>
 
                 <!-- 願意幫助人數 -->
                 <div
