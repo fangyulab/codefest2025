@@ -359,9 +359,7 @@ import { Icon } from '@iconify/vue';
 import MapPage from './pages/MapPage.vue';
 
 // ==================== API 配置 ====================
-// const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
-const API_BASE_URL = 'http://localhost:8080/api';
-
+const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
 const CURRENT_USER_ID = 1; // 寫死的使用者 ID，之後再實作登入功能
 
 // ==================== 型別定義 ====================
