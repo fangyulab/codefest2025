@@ -123,6 +123,47 @@
               </div>
             </div>
 
+            <!-- 篩選 icon -->
+            <button @click="toggleFilter" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+              <Icon icon="mi:filter" class="w-5 h-5" />
+            </button>
+
+            <!-- 篩選區塊（可收合） -->
+            <transition name="fade-slide">
+              <div v-if="showFilterBar" class="px-4 flex flex-col gap-1.5 mt-1 overflow-hidden">
+                <!-- 行政區 -->
+                <div class="flex items-center gap-1.5 text-[10px] text-slate-500 overflow-x-auto no-scrollbar py-0.5">
+                  <span class="font-medium text-slate-700 flex-shrink-0 mr-1">行政區</span>
+                  <div class="flex flex-nowrap gap-1.5">
+                    <button v-for="tag in districtTags" :key="tag.key" @click="selectedDistrict = tag.key" :class="[
+                      'px-2.5 py-1 rounded-full border text-[10px] flex-shrink-0 transition-all whitespace-nowrap',
+                      selectedDistrict === tag.key
+                        ? 'bg-[#71C5D5] text-white border-[#71C5D5]'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ]">
+                      {{ tag.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 事件 -->
+                <div class="flex items-center gap-1.5 text-[10px] text-slate-500 overflow-x-auto no-scrollbar py-0.5">
+                  <span class="font-medium text-slate-700 flex-shrink-0 mr-1">事件</span>
+                  <div class="flex flex-nowrap gap-1.5">
+                    <button v-for="tag in incidentTags" :key="tag.key" @click="selectedIncident = tag.key" :class="[
+                      'px-2.5 py-1 rounded-full border text-[10px] flex-shrink-0 transition-all whitespace-nowrap',
+                      selectedIncident === tag.key
+                        ? 'bg-[#71C5D5] text-white border-[#71C5D5]'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ]">
+                      {{ tag.label }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </transition>
+
+
             <!-- 頁首分隔線，讓標題與列表之間有更明顯的區隔 -->
             <div class="flex h-px bg-slate-100 m-4"></div>
 
@@ -472,6 +513,32 @@ const resolvePost = async (postId: number) => {
   }
 };
 
+
+// 篩選用 tags
+const districtTags = [
+  { key: 'all', label: '全部' },
+  { key: '大安區', label: '大安區' },
+  { key: '信義區', label: '信義區' },
+  { key: '中山區', label: '中山區' },
+  { key: '內湖區', label: '內湖區' },
+  { key: '文山區', label: '文山區' },
+  // 想再加就繼續放
+];
+
+const incidentTags = [
+  { key: 'all', label: '全部' },
+  { key: '跟蹤', label: '跟蹤' },
+  { key: '性騷擾', label: '性騷擾' },
+  { key: '騷擾', label: '騷擾' },
+  { key: '偷拍', label: '偷拍' },
+  { key: '可疑人物', label: '可疑人物' },
+];
+
+const selectedDistrict = ref<string>('all');
+const selectedIncident = ref<string>('all');
+
+
+
 // ==================== 狀態管理 ====================
 const selectedRequest = ref<HelpRequest | null>(null);
 const activeTab = ref(0);
@@ -485,6 +552,11 @@ const formData = reactive({
 
 const helpRequests = ref<HelpRequest[]>([]);
 const showNearby = ref(true);
+const showFilterBar = ref(false);
+const toggleFilter = () => {
+  showFilterBar.value = !showFilterBar.value;
+};
+
 const userLocation = ref<UserLocation | null>(null);
 const toastMessage = ref<string | null>(null);
 const isModalOpen = ref(false);
@@ -649,7 +721,24 @@ watch(activeTab, (newTab) => {
 });
 
 const filteredRequests = computed(() => {
-  return helpRequests.value;
+  let list = helpRequests.value;
+
+  // 行政區篩選：看 locationText 有沒有包含選取的字
+  if (selectedDistrict.value !== 'all') {
+    list = list.filter(req =>
+      req.locationText?.includes(selectedDistrict.value)
+    );
+  }
+
+  // 事件篩選：從標題 / 內容裡面找關鍵字
+  if (selectedIncident.value !== 'all') {
+    list = list.filter(req =>
+      req.title?.includes(selectedIncident.value) ||
+      req.content?.includes(selectedIncident.value)
+    );
+  }
+
+  return list;
 });
 
 const markAsResolved = async (id: number) => {
@@ -681,5 +770,25 @@ const markAsResolved = async (id: number) => {
 .card-fade-leave-to {
   opacity: 0;
   transform: translateY(6px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.25s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 </style>
