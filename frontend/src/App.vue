@@ -209,8 +209,13 @@
 
           <!-- Tab 3: 地圖定位 -->
           <section v-else-if="activeTab === 2" class="space-y-4">
-            <MapPage :help-requests="helpRequests" :user-location="userLocation" />
+            <MapPage
+              :help-requests="helpRequests"
+              :user-location="userLocation"
+              @open-request="openRequest"  
+            />
           </section>
+
 
         </div>
       </main>
@@ -219,7 +224,7 @@
       <!-- 求助詳細內容彈窗 -->
       <transition name="fade-up">
         <div v-if="isModalOpen"
-          class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
+          class="fixed inset-0 z-2000 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
           @click.self="closeRequest">
           <div :class="[
             'w-full max-w-md mx-4 rounded-3xl shadow-xl p-6 relative border transition-all',
