@@ -1,7 +1,6 @@
 import requests
-import json
 
-API_BASE = 'http://127.0.0.1:8080/api'
+API_BASE = 'https://flask-demo-188795468423.asia-east1.run.app/api'
 
 def test_api():
     print("=" * 50)
