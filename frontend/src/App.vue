@@ -177,7 +177,12 @@
                 <!-- 地點與發佈時間 -->
                 <div class="flex flex-col text-[10px] text-slate-500">
                   <div class="flex items-center gap-1">
-                    <Icon icon="fluent:location-20-filled" class="size-4" />
+                    <Icon icon="fluent:location-20-filled" 
+                      class="size-4" 
+                      :class="[req.urgency === '1' ? 'text-[#D45251]' : '',
+                      req.urgency === '2' ? 'text-[#FD853A]' : '',
+                      req.urgency === '3' ? 'text-[#F5BA4B]' : '']"
+                    />
                     <span>{{ req.location }}</span>
                   </div>
                   <div class="text-[9px] text-slate-400 mt-0.5">
