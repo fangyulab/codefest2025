@@ -390,7 +390,14 @@ import MapPage from './pages/MapPage.vue';
 
 // ==================== API 配置 ====================
 const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
-const CURRENT_USER_ID = 1; // 寫死的使用者 ID，之後再實作登入功能
+
+const getUserIdFromUrl = (): number => {
+  const params = new URLSearchParams(window.location.search);
+  const userId = params.get('user_id');
+  return userId ? parseInt(userId, 10) : 1;
+};
+
+const CURRENT_USER_ID = getUserIdFromUrl();
 
 // ==================== 型別定義 ====================
 interface HelpRequest {

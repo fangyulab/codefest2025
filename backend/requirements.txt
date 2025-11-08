@@ -1,4 +1,6 @@
 Flask==3.0.0
 flask-cors==4.0.0
 firebase_admin==7.1.0
-geopy
+geopy==2.4.1
+scikit-learn==1.7.2
+sentence-transformers==5.1.2
