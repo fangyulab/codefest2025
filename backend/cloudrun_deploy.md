@@ -45,8 +45,7 @@ python app.py
 執行以下指令（會自動打包最新程式）：
 
 ```bash
-gcloud builds submit \
-  --tag asia-east1-docker.pkg.dev/cred-id/my-repo/flask-demo
+gcloud builds submit --tag asia-east1-docker.pkg.dev/cred-id/my-repo/flask-demo
 ```
 
 > 💡 這會：
@@ -62,11 +61,7 @@ gcloud builds submit \
 將新映像套用到 Cloud Run 服務：
 
 ```bash
-gcloud run deploy flask-demo \
-  --image asia-east1-docker.pkg.dev/cred-id/my-repo/flask-demo \
-  --platform managed \
-  --region asia-east1 \
-  --allow-unauthenticated
+gcloud run deploy flask-demo --image asia-east1-docker.pkg.dev/cred-id/my-repo/flask-demo --platform managed --region asia-east1 --allow-unauthenticated
 ```
 
 > 🟢 Cloud Run 會：
