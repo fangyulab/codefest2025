@@ -6,7 +6,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import os
 from geo import geo_bp
-
+from classifier import IncidentClassifier
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +16,9 @@ app.register_blueprint(geo_bp, url_prefix="/api/geo")
 cred = credentials.Certificate("key.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
+
+print("🚀 正在初始化分類器...")
+classifier = IncidentClassifier()
 
 # Firestore 集合名稱
 USERS_COL = db.collection("users")
@@ -114,6 +117,23 @@ def create_post():
     }
     POSTS_COL.document(str(new_id)).set(post)
     return jsonify({"success": True, "post": post})
+
+# 運行分類器的 API
+@app.route("/api/classify", methods=["POST"])
+def classify_text():
+    """分類器"""
+    data = request.json
+    title = data.get("title", "")
+    content = data.get("content", "")
+    
+    if not title and not content:
+        return jsonify({"success": False, "message": "請提供標題或內容"}), 400
+    
+    try:
+        result = classifier.classify_with_confidence(title, content)
+        return jsonify({"success": True, **result})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
 # 3. 取得所有貼文
 @app.route("/api/posts", methods=["GET"])
@@ -254,7 +274,6 @@ def get_map_data():
 
 # ==================== 啟動伺服器 ====================
 if __name__ == "__main__":
-    # 已佈署：https://flask-demo-188795468423.asia-east1.run.app/api
     port = int(os.environ.get("PORT", 8080))
     print(f"後端伺服器啟動於 http://0.0.0.0:{port}")
     app.run(host="0.0.0.0", port=port)

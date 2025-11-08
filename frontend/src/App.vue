@@ -257,7 +257,7 @@
         >
           <div
             :class="[
-              'w-full max-w-md mx-4 rounded-3xl shadow-xl p-6 relative border transition-all',
+              'w-full max-w-md mx-4 rounded-3xl shadow-xl relative border transition-all',
               selectedRequest && selectedRequest.isMine
                 ? 'bg-white border-[#B4E2EA]'
                 : 'bg-[#DBF1F5] border-none'
@@ -273,81 +273,83 @@
             </button>
 
             <!-- 有選取貼文時 -->
-            <div v-if="selectedRequest" class="flex flex-col gap-5 text-sm text-slate-800">
+            <div v-if="selectedRequest" class="flex flex-col ">
               <!-- 標題 + 時間 -->
-              <header class="space-y-1 pr-6">
-                <h3 class="text-base font-semibold text-slate-900 leading-snug">
-                  {{ selectedRequest.title }}
-                </h3>
-                <p class="text-[11px] text-slate-400">
-                  發布時間：{{ selectedRequest.timestamp }}
-                </p>
-              </header>
+              <div class="p-6 flex flex-col gap-5 text-sm text-slate-800">
+                <header class="space-y-1 pr-6">
+                  <h3 class="text-base font-semibold text-slate-900 leading-snug">
+                    {{ selectedRequest.title }}
+                  </h3>
+                  <p class="text-[11px] text-slate-400">
+                    發布時間：{{ selectedRequest.timestamp }}
+                  </p>
+                </header>
 
-              <!-- 地點 / 距離 -->
-              <section
-                class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]"
-              >
-                <div class="flex items-start gap-2">
-                  <Icon
-                    icon="fluent:location-20-filled"
-                    class="size-4"
-                    :class="[
-                      selectedRequest.urgency === 1 ? 'text-[#D45251]' : '',
-                      selectedRequest.urgency === 2 ? 'text-[#FD853A]' : '',
-                      selectedRequest.urgency === 3 ? 'text-[#F5BA4B]' : ''
-                    ]"
-                  />
-                  <div class="leading-relaxed">
-                    <span class="font-medium text-slate-800">地點：</span>
-                    <span class="text-slate-700">
-                      {{ selectedRequest.locationText }}
+                <!-- 地點 / 距離 -->
+                <section
+                  class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]"
+                >
+                  <div class="flex items-start gap-2">
+                    <Icon
+                      icon="fluent:location-20-filled"
+                      class="size-4"
+                      :class="[
+                        selectedRequest.urgency === 1 ? 'text-[#D45251]' : '',
+                        selectedRequest.urgency === 2 ? 'text-[#FD853A]' : '',
+                        selectedRequest.urgency === 3 ? 'text-[#F5BA4B]' : ''
+                      ]"
+                    />
+                    <div class="leading-relaxed">
+                      <span class="font-medium text-slate-800">地點：</span>
+                      <span class="text-slate-700">
+                        {{ selectedRequest.locationText }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="selectedRequest.distance_text"
+                    class="flex items-center gap-2 pl-6 text-[11px]"
+                  >
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium"
+                    >
+                      {{ selectedRequest.distance_text }}
                     </span>
                   </div>
-                </div>
+                </section>
 
-                <div
-                  v-if="selectedRequest.distance_text"
-                  class="flex items-center gap-2 pl-6 text-[11px]"
-                >
-                  <span
-                    class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium"
+                <!-- 求助內容 -->
+                <section class="space-y-1">
+                  <p
+                    class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700"
                   >
-                    {{ selectedRequest.distance_text }}
-                  </span>
-                </div>
-              </section>
+                    {{ selectedRequest.content }}
+                  </p>
+                </section>
 
-              <!-- 求助內容 -->
-              <section class="space-y-1">
-                <p
-                  class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700"
+                <!-- 聯絡方式 -->
+                <div
+                  v-if="selectedRequest.contact"
+                  class="flex flex-wrap items-center gap-2 text-[13px] text-slate-700"
                 >
-                  {{ selectedRequest.content }}
+                  <p class="font-medium text-slate-800 m-0">聯絡方式：</p>
+                  <p class="break-words">
+                    {{ selectedRequest.contact }}
+                  </p>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">
+                  請自行斟酌聯絡與資訊安全，避免提供過多個資。
                 </p>
-              </section>
 
-              <!-- 聯絡方式 -->
-              <div
-                v-if="selectedRequest.contact"
-                class="flex flex-wrap items-center gap-2 text-[13px] text-slate-700"
-              >
-                <p class="font-medium text-slate-800 m-0">聯絡方式：</p>
-                <p class="break-words">
-                  {{ selectedRequest.contact }}
-                </p>
-              </div>
-              <p class="text-[10px] text-slate-400 mt-1">
-                請自行斟酌聯絡與資訊安全，避免提供過多個資。
-              </p>
-
-              <!-- 願意幫助人數 -->
-              <div
-                v-if="selectedRequest.helper_count && selectedRequest.helper_count > 0"
-                class="flex items-center gap-2 text-[12px] text-slate-600"
-              >
-                <Icon icon="mdi:account-multiple" class="size-4" />
-                <span>{{ selectedRequest.helper_count }} 人表示願意提供協助</span>
+                <!-- 願意幫助人數 -->
+                <div
+                  v-if="selectedRequest.helper_count && selectedRequest.helper_count > 0"
+                  class="flex items-center gap-2 text-[12px] text-slate-600"
+                >
+                  <Icon icon="mdi:account-multiple" class="size-4" />
+                  <span>{{ selectedRequest.helper_count }} 人表示願意提供協助</span>
+                </div>
               </div>
 
               <!-- ✅ 自己的貼文：標記為已解決 -->
@@ -382,8 +384,8 @@
                   <button
                     v-if="selectedRequest.lat && selectedRequest.lng"
                     @click="openGoogleMap(selectedRequest.lat, selectedRequest.lng)"
-                    class="flex-1 py-4 text-sm font-medium text-slate-500 tracking-tight 
-                          active:scale-[0.99] transition-all rounded-br-3xl hover:bg-slate-100"
+                    class="flex-1 py-4 text-sm font-medium text-[#356C77] tracking-tight 
+                          active:scale-[0.99] transition-all rounded-br-3xl"
                   >
                     進入 Google Map
                   </button>
@@ -439,7 +441,14 @@ import MapPage from './pages/MapPage.vue';
 
 // ==================== API 配置 ====================
 const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
-const CURRENT_USER_ID = 1; // 寫死的使用者 ID，之後再實作登入功能
+
+const getUserIdFromUrl = (): number => {
+  const params = new URLSearchParams(window.location.search);
+  const userId = params.get('user_id');
+  return userId ? parseInt(userId, 10) : 1;
+};
+
+const CURRENT_USER_ID = getUserIdFromUrl();
 
 // ==================== 型別定義 ====================
 interface HelpRequest {
