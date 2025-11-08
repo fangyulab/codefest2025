@@ -1,42 +1,12 @@
 <template>
-  <div class="min-h-screen w-full bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900 flex flex-col">
-    <!-- 頂部導覽列 -->
-    <header class="w-full border-b border-slate-200 bg-white/70 backdrop-blur-md">
-      <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <img src="./assets/logo.PNG" alt="SafeCity" class="w-9 h-9 rounded-xl shadow-sm object-cover" />
-          <div>
-            <h1 class="text-base font-semibold text-slate-900 tracking-tight">
-              SafeCity 求助平台
-            </h1>
-            <p class="text-[11px] text-slate-500 leading-tight">
-              快速發布 & 即時查看附近求助資訊
-            </p>
-          </div>
-        </div>
-        <div class="hidden sm:flex items-center gap-2 text-[10px] text-slate-400">
-          <span class="inline-flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>位置服務</span>
-          <span v-if="userLocation">已啟用</span>
-          <span v-else>等待授權</span>
-        </div>
-      </div>
-    </header>
-
+  <div class="min-h-screen w-full bg-gray-50 text-slate-900 flex flex-col">
     <!-- 主內容 -->
     <main class="flex-1 w-full">
       <div class="max-w-4xl mx-auto px-4 pt-4 pb-24">
         <!-- 內容卡片 -->
 
         <!-- Tab 1: 發布求助表單 -->
-        <section v-if="activeTab === 0" class="space-y-5">
-          <div class="flex items-center justify-between gap-3">
-            <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
-              <Send class="w-5 h-5 text-indigo-500" />
-              發布求助資訊
-            </h2>
-          </div>
-
+        <section v-if="activeTab === 0" class="flex flex-col gap-4 space-y-5">
           <div class="grid gap-4">
             <div>
               <label class="block text-xs font-medium text-slate-700 mb-1.5">求助標題 *</label>
@@ -67,19 +37,59 @@
                 <label class="block text-xs font-medium text-slate-700 mb-1.5">聯絡方式（選填）</label>
                 <input type="text" v-model="formData.contact" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
                           focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
-                          placeholder:text-slate-300 transition-all" placeholder="手機、LINE ID 或其他安全聯絡方式" />
+                          placeholder:text-slate-300 transition-all"
+                  placeholder="手機、LINE ID 或其他安全聯絡方式"
+                />
+              </div>
+            </div>
+
+            <div class="block text-lg font-semibold text-slate-700 mb-1.5">
+              <div class="flex items-center gap-2">
+                <Icon icon="si:alert-fill" class="size-5" />
+                緊急程度
+              </div>
+              <div class="mt-2 grid grid-cols-3 gap-2 text-[10px]">
+                <button
+                  v-for="option in urgencyOptions"
+                  :key="option.value"
+                  type="button"
+                  @click="formData.urgency = option.value"
+                  :class="[
+                    'flex flex-col items-start justify-center px-2.5 py-2 rounded-2xl border transition-all h-full',
+                    formData.urgency === option.value
+                      ? option.activeClass
+                      : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                  ]"
+                >
+                  <div class="flex items-center gap-1.5 mb-0.5">
+                    <span
+                      class="w-1.5 h-1.5 rounded-full"
+                      :class="option.dotClass"
+                    ></span>
+                    <span class="font-semibold tracking-tight">
+                      {{ option.label }}
+                    </span>
+                  </div>
+                  <p class="text-[9px] leading-snug opacity-80">
+                    {{ option.desc }}
+                  </p>
+                </button>
               </div>
             </div>
           </div>
 
-          <button @click="handleSubmit" class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white py-3
-                    text-sm font-semibold shadow-sm hover:bg-indigo-700 active:scale-[0.99] transition-all">
-            <Send class="w-4 h-4" />
-            立即發布求助資訊
-          </button>
 
+          <button
+            @click="handleSubmit"
+            class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white py-3
+                    text-sm font-semibold shadow-sm hover:bg-indigo-700 active:scale-[0.99] transition-all"
+          >
+            <Send class="w-4 h-4" />
+            發布求助資訊
+          </button>
           <p class="text-[10px] text-slate-400 leading-relaxed">
-            請避免張貼身分證號、完整家庭地址等敏感資料。此介面為示意版，資料僅暫存於本機。
+            *本平台之所有貼文雖以匿名方式公開顯示，但系統內部仍保留使用者之實名制註冊資料，以確保必要時可追溯來源。
+若經查證有違規行為，本平台有權依規定採取相應措施，並配合相關單位進行調查。
           </p>
         </section>
 
@@ -266,7 +276,7 @@
 
 
             <!-- 聯絡方式（如果有填） -->
-            <p class="font-medium text-slate-800">聯絡方式:</p>
+            <p class="font-medium text-slate-800">聯絡方式：</p>
             <section v-if="selectedRequest.contact"
               class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 space-y-1.5 text-[12px]">
               <p class="text-slate-700 break-words">
