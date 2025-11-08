@@ -50,7 +50,7 @@
                   <input type="text" v-model="formData.locationText" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
                             focus:outline-none focus:ring-2 focus:ring-[#93D4DF]
                             placeholder:text-slate-300 transition-all" placeholder="例：台北市大安區信義路三段、學校側門附近" />
-                  <button @click="catchLocation" class="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#93D4DF] text-[10px] font-medium text-[#356C77] text-center">
+                  <button @click="catchLocation" class="flex-shrink-0 mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#93D4DF] text-[10px] font-medium text-[#356C77] text-center">
                     套用現在位置
                   </button>
                 </div>
@@ -90,8 +90,32 @@
                   </div>
                 </div>
               </div>
+
+              <div class=" text-xs font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <Icon icon="si:alert-fill" class="size-5" />
+                  事件類別
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  <button
+                    v-for="opt in incidentTags.slice(1)"
+                    :key="opt.key"
+                    type="button"
+                    @click="toggleIncidentLabel(opt.key)"
+                    :class="[
+                      'px-2.5 py-1 rounded-full border text-[10px] transition-all',
+                      formData.incidentLabels.includes(opt.key)
+                        ? 'bg-[#71C5D5] text-white border-[#71C5D5]'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ]"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </div>
+              </div>
             </div>
 
+            <div class="h-2"></div>
 
             <button @click="handleSubmit" :disabled="isSubmitting"
               class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#71C5D5] text-white py-3
@@ -387,6 +411,7 @@ interface HelpRequest {
   distance?: number;
   distance_text?: string;
   helper_count?: number;
+  labels?: string[];
 }
 
 interface UserLocation {
@@ -446,48 +471,49 @@ const fetchPosts = async () => {
             } catch (err) {
               console.warn('貼文地址轉換失敗，使用原始 location：', err);
             }
-          }else{
-            results.push({
-              id: post.id,
-              title: post.title,
-              content: post.content,
-              location: post.location,
-              locationText: addressText,
-              contact: post.contact,
-              urgency: post.urgency,
-              timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
-              latitude: lat,
-              longitude: lng,
-              lat,
-              lng,
-              isMine: post.user_id === CURRENT_USER_ID,
-              resolved: post.resolved,
-              distance: post.distance,
-              distance_text: post.distance_text,
-              helper_count: post.helper_count || 0
-            });
           }
+          results.push({
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            location: post.location,
+            locationText: addressText,
+            contact: post.contact,
+            urgency: post.urgency,
+            timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
+            latitude: lat,
+            longitude: lng,
+            lat,
+            lng,
+            isMine: post.user_id === CURRENT_USER_ID,
+            resolved: post.resolved,
+            distance: post.distance,
+            distance_text: post.distance_text,
+            helper_count: post.helper_count || 0,
+            labels: post.labels || []
+          });
+        }else{
+          results.push({
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            location: post.location,
+            locationText: post.locationText,
+            contact: post.contact,
+            urgency: post.urgency,
+            timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
+            latitude: lat,
+            longitude: lng,
+            lat,
+            lng,
+            isMine: post.user_id === CURRENT_USER_ID,
+            resolved: post.resolved,
+            distance: post.distance,
+            distance_text: post.distance_text,
+            helper_count: post.helper_count || 0,
+            labels: post.labels || []
+          });
         }
-
-        results.push({
-          id: post.id,
-          title: post.title,
-          content: post.content,
-          location: post.location,
-          locationText: post.locationText,
-          contact: post.contact,
-          urgency: post.urgency,
-          timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
-          latitude: lat,
-          longitude: lng,
-          lat,
-          lng,
-          isMine: post.user_id === CURRENT_USER_ID,
-          resolved: post.resolved,
-          distance: post.distance,
-          distance_text: post.distance_text,
-          helper_count: post.helper_count || 0
-        });
       }
 
       helpRequests.value = results;
@@ -522,7 +548,7 @@ const createPost = async () => {
         locationText: formData.locationText,
         urgency: formData.urgency,
         contact: formData.contact.trim(),
-        labels: [] // 如果之後需要標籤功能可以加
+        labels: formData.incidentLabels
       })
     });
 
@@ -538,6 +564,7 @@ const createPost = async () => {
       formData.locationText = '';
       formData.contact = '';
       formData.urgency = 0;
+      formData.incidentLabels = [];
 
       // 重新載入貼文列表
       await fetchPosts();
@@ -656,7 +683,8 @@ const formData = reactive({
   location: '',
   locationText:'',
   contact: '',
-  urgency: 0
+  urgency: 0,
+  incidentLabels: [] as string[] 
 });
 
 const helpRequests = ref<HelpRequest[]>([]);
@@ -848,9 +876,10 @@ const filteredRequests = computed(() => {
     );
   }
 
-  // 事件篩選：從標題 / 內容裡面找關鍵字
+  // 事件篩選：優先用 labels，比對不到再 fallback 到 標題 / 內容
   if (selectedIncident.value !== 'all') {
     list = list.filter(req =>
+      (req.labels && req.labels.includes(selectedIncident.value)) ||
       req.title?.includes(selectedIncident.value) ||
       req.content?.includes(selectedIncident.value)
     );
@@ -858,6 +887,7 @@ const filteredRequests = computed(() => {
 
   return list;
 });
+
 
 const markAsResolved = async (id: number) => {
   await resolvePost(id);
@@ -901,6 +931,14 @@ const catchLocation = async () => {
 };
 
 
+const toggleIncidentLabel = (key: string) => {
+  const idx = formData.incidentLabels.indexOf(key);
+  if (idx === -1) {
+    formData.incidentLabels.push(key);
+  } else {
+    formData.incidentLabels.splice(idx, 1);
+  }
+};
 
 </script>
 
