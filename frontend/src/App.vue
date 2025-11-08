@@ -9,17 +9,17 @@
           <!-- 內容卡片 -->
 
           <!-- Tab 1: 發布求助表單 -->
-          <section v-if="activeTab === 0" class="flex flex-col gap-3 space-y-5 ">
+          <section v-if="activeTab === 0" class="flex flex-col gap-3 space-y-5">
             <div class="flex flex-wrap items-center justify-between gap-3 m-8">
-              <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                <Icon icon="iconamoon:edit-fill" class="size-6 text-[#468D9B]" />
+              <h2 class="text-xs font-semibold text-slate-900 flex items-center gap-2">
+                <Icon icon="iconamoon:edit-fill" class="size-3 text-[#468D9B]" />
                 求助訊息填寫
               </h2>
             </div>
             <div class="flex h-px bg-slate-100 m-4"></div>
 
             <div class="grid gap-4 px-4">
-              <div class="text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
+              <div class="text-xs font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <Icon icon="tabler:sos" class="size-5" />
                   求助標題 *
@@ -29,7 +29,7 @@
                           placeholder:text-slate-300 transition-all" placeholder="有人跟蹤我" />
               </div>
               <div class="grid sm:grid-cols-[2fr,1fr] gap-4">
-                <div class="text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
+                <div class="text-xs font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                   <div class="flex items-center gap-2">
                     <Icon icon="solar:chat-dots-bold" class="size-5" />
                     求助內容
@@ -42,7 +42,7 @@
               </div>
 
               <div class="grid sm:grid-cols-[2fr,1fr] gap-4">
-                <div class="text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
+                <div class="text-xs font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                   <div class="flex items-center gap-2">
                     <Icon icon="fluent:location-20-filled" class="size-5" />
                     定位 *
@@ -51,7 +51,7 @@
                             focus:outline-none focus:ring-2 focus:ring-[#93D4DF]
                             placeholder:text-slate-300 transition-all" placeholder="例：台北市大安區信義路三段、學校側門附近" />
                 </div>
-                <div class="text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
+                <div class="text-xs font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                   <div class="flex items-center gap-2">
                     <Icon icon="gridicons:phone" class="size-5" />
                     聯絡方式
@@ -62,7 +62,7 @@
                 </div>
               </div>
 
-              <div class=" text-base font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
+              <div class=" text-xs font-semibold text-slate-700 mb-1.5 flex flex-col gap-1">
                 <div class="flex items-center gap-2">
                   <Icon icon="si:alert-fill" class="size-5" />
                   緊急程度
@@ -106,18 +106,18 @@
           <section v-else-if="activeTab === 1" class="flex flex-col space-y-4 gap-3 w-full">
             <!-- 標題列 -->
             <div class="flex flex-wrap items-center justify-between gap-3 m-8">
-              <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                <Icon icon="fa:users" class="size-6 text-[#468D9B]" />
+              <h2 class="text-xs font-semibold text-slate-900 flex items-center gap-2">
+                <Icon icon="fa:users" class="size-3 text-[#468D9B]" />
                 求助資訊列表
               </h2>
               <div class="flex items-center gap-2">
                 <button @click="toggleNearby" :class="[
-                  'px-3 py-1.5 rounded-full text-xs font-medium  transition-all flex items-center gap-1',
+                  'px-3 py-1 rounded-full text-xs font-medium  transition-all flex items-center gap-1',
                   showNearby
                     ? 'bg-slate-50 text-slate-600  hover:bg-slate-100'
                     : 'bg-[#71C5D5] text-white'
                 ]">
-                  <Icon icon="fluent:location-20-filled" class="size-5" />
+                  <Icon icon="fluent:location-20-filled" class="size-3" />
                   {{ showNearby ? '顯示附近 5 公里' : '顯示所有求助' }}
                 </button>
               </div>
@@ -329,16 +329,16 @@
 
 
       <!-- 底部 Tab 導航 -->
-      <nav class="fixed bottom-0 left-0 right-0 z-20 flex justify-center pb-4">
+      <nav class="fixed bottom-0 left-0 right-0 z-20 flex justify-center">
         <div class="relative w-full max-w-md p-4 bg-gray-50">
-          <div class="relative m-2 mt-0 mb-1 flex items-center gap-2 rounded-full
-                  bg-[#DBF1F5] px-3 py-2 pb-4 h-14">
+          <div class="relative m-2 mt-0 mb-1 flex items-center justify-center gap-2 rounded-full
+                  bg-[#DBF1F5] px-3 py-2 h-14">
             <div class="absolute left-2 top-1/2 -translate-y-1/2 h-12 w-1/3
                     rounded-full bg-[#71C5D5] shadow-md transition-transform duration-300" :class="translateClass" />
 
             <button v-for="(tab, index) in tabs" :key="tab.name" @click="activeTab = index"
               class="relative z-10 flex-1 flex flex-col items-center gap-0.5 py-1">
-              <Icon :icon="tab.icon" :class="activeTab === index ? 'text-white size-8' : 'text-[#356C77] size-7'" />
+              <Icon :icon="tab.icon" :class="activeTab === index ? 'text-white size-6' : 'text-[#356C77] size-5'" />
             </button>
           </div>
         </div>
@@ -743,8 +743,8 @@ const tabs = [
 
 const translateClass = computed(() => {
   if (activeTab.value === 0) return 'translate-x-0';
-  if (activeTab.value === 1) return 'translate-x-[95%]';
-  return 'translate-x-[190%]';
+  if (activeTab.value === 1) return 'translate-x-[92%]';
+  return 'translate-x-[185%]';
 });
 
 async function fetchAddress(lat: number, lon: number): Promise<string> {

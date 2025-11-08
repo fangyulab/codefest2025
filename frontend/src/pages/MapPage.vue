@@ -1,9 +1,16 @@
 <template>
 <div>
-  <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2 space-y-4 pb-4">
-    <Map class="w-5 h-5 text-indigo-500" />
-    地圖定位與距離
-  </h2>
+  <div class="flex flex-col gap-3 space-y-5">
+    <div class="flex flex-wrap items-center justify-between gap-3 m-8">
+      <h2 class="text-xs font-semibold text-slate-900 flex items-center gap-2">
+        <Icon icon="mingcute:map-fill" class="size-3 text-[#468D9B]" />
+        地圖定位
+      </h2>
+    </div>
+    <div class="flex h-px bg-slate-100 m-4"></div>
+  </div>
+
+  <div class="h-2"></div>
 
   <!-- 地圖區 -->
   <div
