@@ -1,10 +1,11 @@
 <!-- App.vue -->
 <template>
-  <div class="w-full h-screen text-slate-900 flex flex-col  items-center">
-    <div class="max-w-2xl w-screen bg-gray-50 h-full">
+  <div class="w-full h-screen text-slate-900 flex justify-center">
+    <div class="max-w-2xl w-full bg-gray-50 h-full flex flex-col">
+      <!-- main + nav -->
       <!-- 主內容 -->
-      <main class="w-full">
-        <div class="mx-auto px-4 pt-4 pb-24">
+      <main class="w-full flex-1 overflow-y-auto">
+        <div class="mx-auto px-4 pt-4 pb-28">
           <!-- 內容卡片 -->
 
           <!-- Tab 1: 發布求助表單 -->
@@ -89,7 +90,8 @@
             </div>
 
 
-            <button @click="handleSubmit" :disabled="isSubmitting" class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#71C5D5] text-white py-3
+            <button @click="handleSubmit" :disabled="isSubmitting"
+              class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#71C5D5] text-white py-3
                       text-sm font-semibold shadow-sm active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               <Icon icon="streamline:send-email-solid" />
               {{ isSubmitting ? '發布中...' : '發布' }}
@@ -120,6 +122,47 @@
                 </button>
               </div>
             </div>
+
+            <!-- 篩選 icon -->
+            <button @click="toggleFilter" class="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+              <Icon icon="mi:filter" class="w-5 h-5" />
+            </button>
+
+            <!-- 篩選區塊（可收合） -->
+            <transition name="fade-slide">
+              <div v-if="showFilterBar" class="px-4 flex flex-col gap-1.5 mt-1 overflow-hidden">
+                <!-- 行政區 -->
+                <div class="flex items-center gap-1.5 text-[10px] text-slate-500 overflow-x-auto no-scrollbar py-0.5">
+                  <span class="font-medium text-slate-700 flex-shrink-0 mr-1">行政區</span>
+                  <div class="flex flex-nowrap gap-1.5">
+                    <button v-for="tag in districtTags" :key="tag.key" @click="selectedDistrict = tag.key" :class="[
+                      'px-2.5 py-1 rounded-full border text-[10px] flex-shrink-0 transition-all whitespace-nowrap',
+                      selectedDistrict === tag.key
+                        ? 'bg-[#71C5D5] text-white border-[#71C5D5]'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ]">
+                      {{ tag.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 事件 -->
+                <div class="flex items-center gap-1.5 text-[10px] text-slate-500 overflow-x-auto no-scrollbar py-0.5">
+                  <span class="font-medium text-slate-700 flex-shrink-0 mr-1">事件</span>
+                  <div class="flex flex-nowrap gap-1.5">
+                    <button v-for="tag in incidentTags" :key="tag.key" @click="selectedIncident = tag.key" :class="[
+                      'px-2.5 py-1 rounded-full border text-[10px] flex-shrink-0 transition-all whitespace-nowrap',
+                      selectedIncident === tag.key
+                        ? 'bg-[#71C5D5] text-white border-[#71C5D5]'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ]">
+                      {{ tag.label }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </transition>
+
 
             <!-- 頁首分隔線，讓標題與列表之間有更明顯的區隔 -->
             <div class="flex h-px bg-slate-100 m-4"></div>
@@ -153,12 +196,9 @@
                 <!-- 地點與發佈時間 -->
                 <div class="flex flex-col text-[10px] text-slate-500">
                   <div class="flex items-center gap-1">
-                    <Icon icon="fluent:location-20-filled"
-                      class="size-4"
-                      :class="[req.urgency === 1 ? 'text-[#D45251]' : '',
-                      req.urgency === 2 ? 'text-[#FD853A]' : '',
-                      req.urgency === 3 ? 'text-[#F5BA4B]' : '']" 
-                    />
+                    <Icon icon="fluent:location-20-filled" class="size-4" :class="[req.urgency === 1 ? 'text-[#D45251]' : '',
+                    req.urgency === 2 ? 'text-[#FD853A]' : '',
+                    req.urgency === 3 ? 'text-[#F5BA4B]' : '']" />
                     <span>{{ req.locationText }}</span>
                   </div>
                   <div class="text-[9px] text-slate-400 mt-0.5">
@@ -210,12 +250,9 @@
               <!-- 基本資訊：地點 / 距離 -->
               <section class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]">
                 <div class="flex items-start gap-2">
-                  <Icon icon="fluent:location-20-filled"
-                      class="size-4"
-                      :class="[selectedRequest.urgency === 1 ? 'text-[#D45251]' : '',
-                      selectedRequest.urgency === 2 ? 'text-[#FD853A]' : '',
-                      selectedRequest.urgency === 3 ? 'text-[#F5BA4B]' : '']" 
-                    />
+                  <Icon icon="fluent:location-20-filled" class="size-4" :class="[selectedRequest.urgency === 1 ? 'text-[#D45251]' : '',
+                  selectedRequest.urgency === 2 ? 'text-[#FD853A]' : '',
+                  selectedRequest.urgency === 3 ? 'text-[#F5BA4B]' : '']" />
                   <div class="leading-relaxed">
                     <span class="font-medium text-slate-800">地點：</span>
                     <span class="text-slate-700">
@@ -259,12 +296,28 @@
               尚未選取任何求助貼文
             </div>
 
+            <!-- 在聯絡方式區塊後面添加 -->
+            <div v-if="selectedRequest.helper_count && selectedRequest.helper_count > 0" 
+                class="flex items-center gap-2 text-[12px] text-slate-600">
+              <Icon icon="mdi:account-multiple" class="size-4" />
+              <span>{{ selectedRequest.helper_count }} 人表示願意提供協助</span>
+            </div>
+
             <!-- ✅ 只有自己的貼文才顯示 -->
             <div v-if="selectedRequest?.isMine"
               class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-white/30 backdrop-blur-sm rounded-b-3xl">
               <button @click="markAsResolved(selectedRequest.id)" :disabled="isResolving"
                 class="w-full py-4 text-sm font-medium text-slate-700 tracking-tight active:scale-[0.99] transition-all rounded-b-3xl disabled:opacity-50 disabled:cursor-not-allowed">
                 {{ isResolving ? '處理中...' : '標記為已解決' }}
+              </button>
+            </div>
+
+            <!-- 別人的貼文 -->
+            <div v-else
+              class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-[#DBF1F5]/50 backdrop-blur-sm rounded-b-3xl">
+              <button @click="helpRequest(selectedRequest.id)" :disabled="isHelping"
+                class="w-full py-4 text-sm font-medium text-[#356C77] tracking-tight active:scale-[0.99] transition-all rounded-b-3xl disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ isHelping ? '通知中...' : '我要幫助他' }}
               </button>
             </div>
           </div>
@@ -348,9 +401,11 @@ const fetchPosts = async () => {
       user_id: String(CURRENT_USER_ID)
     });
 
+
     if (userLocation.value) {
       params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
     }
+
 
     if (showNearby.value) {
       params.append('distance', '5');
@@ -358,6 +413,7 @@ const fetchPosts = async () => {
 
     const response = await fetch(`${API_BASE_URL}/posts?${params}`);
     const data = await response.json();
+
 
     if (data.success) {
       const results: HelpRequest[] = [];
@@ -421,7 +477,7 @@ const fetchPosts = async () => {
 const createPost = async () => {
   try {
     isSubmitting.value = true;
-    
+
     if (!userLocation.value) {
       showToast('無法取得您的位置，請確認已允許定位');
       return;
@@ -444,20 +500,20 @@ const createPost = async () => {
     });
 
     const data = await response.json();
-    
+
     if (data.success) {
       showToast('求助資訊已發布');
-      
+
       // 清空表單
       formData.title = '';
       formData.content = '';
       formData.location = '';
       formData.contact = '';
       formData.urgency = 0;
-      
+
       // 重新載入貼文列表
       await fetchPosts();
-      
+
       // 切換到列表頁
       activeTab.value = 1;
     } else {
@@ -474,7 +530,7 @@ const createPost = async () => {
 const resolvePost = async (postId: number) => {
   try {
     isResolving.value = true;
-    
+
     const response = await fetch(`${API_BASE_URL}/posts/${postId}/resolve`, {
       method: 'POST',
       headers: {
@@ -486,7 +542,7 @@ const resolvePost = async (postId: number) => {
     });
 
     const data = await response.json();
-    
+
     if (data.success) {
       showToast('貼文已標記為已解決');
       closeRequest();
@@ -502,6 +558,71 @@ const resolvePost = async (postId: number) => {
   }
 };
 
+<<<<<<< HEAD
+
+// 篩選用 tags
+const districtTags = [
+  { key: 'all', label: '全部' },
+  { key: '大安區', label: '大安區' },
+  { key: '信義區', label: '信義區' },
+  { key: '中山區', label: '中山區' },
+  { key: '內湖區', label: '內湖區' },
+  { key: '文山區', label: '文山區' },
+  // 想再加就繼續放
+];
+
+const incidentTags = [
+  { key: 'all', label: '全部' },
+  { key: '跟蹤', label: '跟蹤' },
+  { key: '性騷擾', label: '性騷擾' },
+  { key: '騷擾', label: '騷擾' },
+  { key: '偷拍', label: '偷拍' },
+  { key: '可疑人物', label: '可疑人物' },
+];
+
+const selectedDistrict = ref<string>('all');
+const selectedIncident = ref<string>('all');
+
+
+=======
+const helpRequest = async (postId: number) => {
+  try {
+    isHelping.value = true;
+
+    const response = await fetch(`${API_BASE_URL}/posts/${postId}/respond`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user_id: CURRENT_USER_ID
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showToast('已通知求助者，感謝您的幫助！');
+      
+      // 更新當前顯示的 helper_count
+      if (selectedRequest.value) {
+        selectedRequest.value.helper_count = data.helper_count;
+      }
+      
+      // 重新載入貼文列表
+      await fetchPosts();
+    } else {
+      showToast(data.message || '操作失敗，請稍後再試');
+    }
+  } catch (error) {
+    console.error('回應失敗:', error);
+    showToast('操作失敗，請稍後再試');
+  } finally {
+    isHelping.value = false;
+  }
+};
+>>>>>>> ad13b9b5d4bba023b8fd48177bdfde650581f189
+
 // ==================== 狀態管理 ====================
 const selectedRequest = ref<HelpRequest | null>(null);
 const activeTab = ref(1);
@@ -515,12 +636,18 @@ const formData = reactive({
 
 const helpRequests = ref<HelpRequest[]>([]);
 const showNearby = ref(true);
+const showFilterBar = ref(false);
+const toggleFilter = () => {
+  showFilterBar.value = !showFilterBar.value;
+};
+
 const userLocation = ref<UserLocation | null>(null);
 const toastMessage = ref<string | null>(null);
 const isModalOpen = ref(false);
 const isLoading = ref(false);
 const isSubmitting = ref(false);
 const isResolving = ref(false);
+const isHelping = ref(false);
 
 let toastTimer: number | null = null;
 
@@ -674,7 +801,7 @@ const handleSubmit = async () => {
     showToast('請填寫所有必填欄位');
     return;
   }
-  
+
   if (!formData.urgency) {
     showToast('請選擇緊急程度');
     return;
@@ -701,7 +828,24 @@ watch(activeTab, (newTab) => {
 });
 
 const filteredRequests = computed(() => {
-  return helpRequests.value;
+  let list = helpRequests.value;
+
+  // 行政區篩選：看 locationText 有沒有包含選取的字
+  if (selectedDistrict.value !== 'all') {
+    list = list.filter(req =>
+      req.locationText?.includes(selectedDistrict.value)
+    );
+  }
+
+  // 事件篩選：從標題 / 內容裡面找關鍵字
+  if (selectedIncident.value !== 'all') {
+    list = list.filter(req =>
+      req.title?.includes(selectedIncident.value) ||
+      req.content?.includes(selectedIncident.value)
+    );
+  }
+
+  return list;
 });
 
 const markAsResolved = async (id: number) => {
@@ -733,5 +877,25 @@ const markAsResolved = async (id: number) => {
 .card-fade-leave-to {
   opacity: 0;
   transform: translateY(6px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.25s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 </style>
