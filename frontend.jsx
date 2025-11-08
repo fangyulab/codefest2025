@@ -582,30 +582,394 @@ function PostListTab({ user }) {
   );
 }
 
-// Tab 3: 地圖 (預留)
-function MapTab() {
-  return (
-    <div className="h-full flex items-center justify-center p-4 pb-24">
-      <div className="text-center">
-        <MapPin size={64} className="text-gray-400 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-gray-800 mb-2">地圖功能</h2>
-        <p className="text-gray-600">此功能將在串接地圖 API 後啟用</p>
-        <p className="text-sm text-gray-500 mt-2">
-          將顯示所有求助點位<br />
-          紅色 = 緊急 | 橘色 = 重要 | 黃色 = 一般
-        </p>
+// Tab 3: 地圖
+function MapTab({ user }) {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markersRef = useRef([]);
+  const [posts, setPosts] = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // 初始化地圖
+  useEffect(() => {
+    if (!mapInstanceRef.current && mapRef.current) {
+      // 建立地圖，中心點設在台北市中心
+      const map = L.map(mapRef.current).setView([25.0330, 121.5654], 13);
+
+      // 加入 OpenStreetMap 圖層
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+    }
+
+    return () => {
+      // 清理地圖實例
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // 載入貼文資料
+  useEffect(() => {
+    fetchMapData();
+    // 每 10 秒自動更新一次
+    const interval = setInterval(fetchMapData, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 當貼文更新時，更新地圖標記
+  useEffect(() => {
+    if (mapInstanceRef.current && posts.length > 0) {
+      updateMarkers();
+    }
+  }, [posts]);
+
+  const fetchMapData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/map`);
+      const data = await response.json();
+      if (data.success) {
+        setPosts(data.points);
+      }
+    } catch (error) {
+      console.error('獲取地圖資料失敗:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateMarkers = () => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    // 移除舊的標記
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    // 為每個貼文建立標記
+    posts.forEach(post => {
+      // 根據緊急程度決定顏色
+      const colorMap = {
+        1: '#ef4444', // 紅色
+        2: '#f97316', // 橘色
+        3: '#eab308'  // 黃色
+      };
+      const color = colorMap[post.urgency] || '#eab308';
+
+      // 建立自訂圖標
+      const icon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background-color: ${color};
+          border: 3px solid white;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          cursor: pointer;
+        "></div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      // 建立標記
+      const marker = L.marker([post.latitude, post.longitude], { icon })
+        .addTo(map);
+
+      // 建立彈出視窗
+      const urgencyText = {
+        1: '🔴 緊急',
+        2: '🟠 重要',
+        3: '🟡 一般'
+      };
+
+      const popupContent = `
+        <div style="min-width: 200px;">
+          <div style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">
+            ${post.title}
+          </div>
+          <div style="color: #666; font-size: 14px; margin-bottom: 8px;">
+            ${urgencyText[post.urgency] || '🟡 一般'}
+          </div>
+          <div style="color: #999; font-size: 12px; margin-bottom: 12px;">
+            ${new Date(post.created_at).toLocaleString('zh-TW')}
+          </div>
+          <button 
+            onclick="window.viewPostFromMap(${post.id})"
+            style="
+              width: 100%;
+              background-color: #8b5cf6;
+              color: white;
+              padding: 8px;
+              border-radius: 6px;
+              border: none;
+              cursor: pointer;
+              font-weight: 600;
+            "
+          >
+            查看詳情
+          </button>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+
+      // 點擊標記時居中並放大
+      marker.on('click', () => {
+        map.setView([post.latitude, post.longitude], 16);
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    // 如果有貼文，調整地圖視野以顯示所有標記
+    if (posts.length > 0) {
+      const bounds = L.latLngBounds(posts.map(p => [p.latitude, p.longitude]));
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  };
+
+  // 查看貼文詳情
+  const viewPostDetail = async (postId) => {
+    try {
+      const response = await fetch(`${API_BASE}/posts/${postId}?location=25.0330,121.5654`);
+      const data = await response.json();
+      if (data.success) {
+        setSelectedPost(data.post);
+      }
+    } catch (error) {
+      console.error('獲取貼文詳情失敗:', error);
+    }
+  };
+
+  // 全域函數供 popup 使用
+  useEffect(() => {
+    window.viewPostFromMap = viewPostDetail;
+    return () => {
+      delete window.viewPostFromMap;
+    };
+  }, []);
+
+  const handleRespond = async (postId) => {
+    try {
+      const response = await fetch(`${API_BASE}/posts/${postId}/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('已通知求助者您正在前往！');
+        viewPostDetail(postId);
+      } else {
+        alert(data.message || '操作失敗');
+      }
+    } catch (error) {
+      alert('連線錯誤');
+    }
+  };
+
+  const handleResolve = async (postId) => {
+    try {
+      const response = await fetch(`${API_BASE}/posts/${postId}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert('已標記為解決！');
+        setSelectedPost(null);
+        fetchMapData();
+      } else {
+        alert(data.message || '操作失敗');
+      }
+    } catch (error) {
+      alert('連線錯誤');
+    }
+  };
+
+  const getUrgencyBadge = (urgency) => {
+    const badges = {
+      1: { text: '緊急', color: 'bg-red-500' },
+      2: { text: '重要', color: 'bg-orange-500' },
+      3: { text: '一般', color: 'bg-yellow-500' }
+    };
+    const badge = badges[urgency] || badges[3];
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs text-white ${badge.color}`}>
+        {badge.text}
+      </span>
+    );
+  };
+
+  // 如果選中了貼文，顯示詳情面板
+  if (selectedPost) {
+    return (
+      <div className="h-full relative">
+        {/* 地圖背景 */}
+        <div ref={mapRef} className="w-full h-full" />
+        
+        {/* 貼文詳情面板 */}
+        <div className="absolute top-4 left-4 right-4 bg-white rounded-lg shadow-2xl p-4 max-w-md z-[1000] max-h-[80vh] overflow-y-auto">
+          <button
+            onClick={() => setSelectedPost(null)}
+            className="text-purple-500 mb-4 flex items-center gap-1 hover:underline"
+          >
+            ← 返回地圖
+          </button>
+
+          <div className="space-y-4">
+            <div className="flex items-start justify-between">
+              <h2 className="text-xl font-bold text-gray-800 flex-1">{selectedPost.title}</h2>
+              {getUrgencyBadge(selectedPost.urgency)}
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin size={16} />
+                <span>{selectedPost.distance_text || '位置資訊'}</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-gray-600">
+                <Clock size={16} />
+                <span>{new Date(selectedPost.created_at).toLocaleString('zh-TW')}</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-gray-600">
+                <Phone size={16} />
+                <span>{selectedPost.contact}</span>
+              </div>
+            </div>
+
+            <div className="border-t pt-3">
+              <p className="text-gray-700 whitespace-pre-wrap">{selectedPost.content}</p>
+            </div>
+
+            {selectedPost.labels && selectedPost.labels.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedPost.labels.map(label => (
+                  <span key={label} className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600">
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="bg-blue-50 p-3 rounded-lg flex items-center justify-between">
+              <span className="text-sm text-gray-700">
+                {selectedPost.helper_count} 人正在前往協助
+              </span>
+              <AlertCircle size={20} className="text-blue-500" />
+            </div>
+
+            <div className="space-y-2">
+              {selectedPost.user_id !== user.id && (
+                <button
+                  onClick={() => handleRespond(selectedPost.id)}
+                  className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                >
+                  我正在前往協助
+                </button>
+              )}
+
+              {selectedPost.user_id === user.id && (
+                <button
+                  onClick={() => handleResolve(selectedPost.id)}
+                  className="w-full bg-purple-500 text-white py-3 rounded-lg font-semibold hover:bg-purple-600 transition-colors"
+                >
+                  標記為已解決
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="h-full relative">
+      {/* 地圖容器 */}
+      <div ref={mapRef} className="w-full h-full" />
+      
+      {/* 圖例面板 */}
+      <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-[1000]">
+        <h3 className="font-bold text-gray-800 mb-3">緊急程度</h3>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow"></div>
+            <span className="text-sm text-gray-700">緊急 (5分鐘內)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-orange-500 border-2 border-white shadow"></div>
+            <span className="text-sm text-gray-700">重要 (15分鐘內)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white shadow"></div>
+            <span className="text-sm text-gray-700">一般 (30分鐘內)</span>
+          </div>
+        </div>
+        <div className="mt-3 pt-3 border-t text-xs text-gray-500">
+          共 {posts.length} 個求助點
+        </div>
+      </div>
+
+      {/* 重新整理按鈕 */}
+      <button
+        onClick={fetchMapData}
+        disabled={loading}
+        className="absolute bottom-24 right-4 bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-purple-600 transition-colors disabled:bg-gray-400 z-[1000] flex items-center gap-2"
+      >
+        <svg className={loading ? 'animate-spin' : ''} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+        </svg>
+        {loading ? '更新中...' : '重新整理'}
+      </button>
+
+      {/* 無資料提示 */}
+      {!loading && posts.length === 0 && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-6 text-center z-[1000]">
+          <MapPin size={48} className="text-gray-400 mx-auto mb-3" />
+          <p className="text-gray-600">目前沒有求助資訊</p>
+        </div>
+      )}
     </div>
   );
 }
 
 // 主應用程式
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    // 從 localStorage 讀取登入狀態
+    const savedUser = localStorage.getItem('safety_help_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [activeTab, setActiveTab] = useState('list');
 
+  // 處理登入
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('safety_help_user', JSON.stringify(userData));
+  };
+
+  // 處理登出
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('safety_help_user');
+  };
+
   if (!user) {
-    return <LoginPage onLogin={setUser} />;
+    return <LoginPage onLogin={handleLogin} />;
   }
 
   const tabs = [
@@ -624,7 +988,7 @@ export default function App() {
           <button
             onClick={() => {
               if (confirm('確定要登出嗎?')) {
-                setUser(null);
+                handleLogout();
               }
             }}
             className="p-2 hover:bg-purple-600 rounded"
@@ -638,7 +1002,7 @@ export default function App() {
       <div className="h-[calc(100vh-128px)] overflow-y-auto">
         {activeTab === 'create' && <CreatePostTab user={user} onPostCreated={() => setActiveTab('list')} />}
         {activeTab === 'list' && <PostListTab user={user} />}
-        {activeTab === 'map' && <MapTab />}
+        {activeTab === 'map' && <MapTab user={user} />}
       </div>
 
       {/* 底部導航 */}

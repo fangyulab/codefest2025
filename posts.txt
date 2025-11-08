@@ -16,5 +16,23 @@
     "resolved": false,
     "created_at": "2025-11-08T12:28:25.797365",
     "helper_count": 0
+  },
+  {
+    "id": 2,
+    "user_id": 5,
+    "title": "sdfsdfsd",
+    "content": "sdfss",
+    "labels": [
+      "偷拍",
+      "小巷"
+    ],
+    "location": "25,120",
+    "latitude": 25.0,
+    "longitude": 120.0,
+    "urgency": 2,
+    "contact": "sdfsdf",
+    "resolved": false,
+    "created_at": "2025-11-08T13:41:44.560765",
+    "helper_count": 0
   }
 ]
