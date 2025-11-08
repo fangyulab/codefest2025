@@ -146,9 +146,12 @@
                 <!-- 地點與發佈時間 -->
                 <div class="flex flex-col text-[10px] text-slate-500">
                   <div class="flex items-center gap-1">
-                    <Icon icon="fluent:location-20-filled" class="size-4" :class="[req.urgency === '1' ? 'text-[#D45251]' : '',
-                    req.urgency === '2' ? 'text-[#FD853A]' : '',
-                    req.urgency === '3' ? 'text-[#F5BA4B]' : '']" />
+                    <Icon icon="fluent:location-20-filled"
+                      class="size-4"
+                      :class="[req.urgency === '1' ? 'text-[#D45251]' : '',
+                      req.urgency === '2' ? 'text-[#FD853A]' : '',
+                      req.urgency === '3' ? 'text-[#F5BA4B]' : '']" 
+                    />
                     <span>{{ req.location }}</span>
                   </div>
                   <div class="text-[9px] text-slate-400 mt-0.5">
@@ -164,75 +167,6 @@
             <MapPage :help-requests="helpRequests" :user-location="userLocation" />
           </section>
 
-          <!---
-        <section v-else-if="activeTab === 2" class="space-y-4">
-          <div
-            class="bg-white/90 backdrop-blur shadow-sm rounded-2xl border border-slate-100 p-5 sm:p-6 transition-all">
-            <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
-              <Map class="w-5 h-5 text-indigo-500" />
-              地圖定位與距離
-            </h2>
-          <!-- Tab 3: 地圖定位 -->
-          <section v-else-if="activeTab === 2" class="space-y-4">
-            <div
-              class="bg-white/90 backdrop-blur shadow-sm rounded-2xl border border-slate-100 p-5 sm:p-6 transition-all">
-              <h2 class="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                <Map class="w-5 h-5 text-indigo-500" />
-                地圖定位與距離
-              </h2>
-
-              <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 text-center space-y-3">
-                <div v-if="userLocation" class="space-y-1">
-                  <MapPin class="mx-auto mb-2 w-10 h-10 text-indigo-500" />
-                  <p class="text-sm font-medium text-slate-800">目前座標（僅用於距離計算）</p>
-                  <p class="text-[10px] text-slate-500">
-                    緯度 {{ userLocation.lat.toFixed(6) }}・經度 {{ userLocation.lng.toFixed(6) }}
-                  </p>
-                </div>
-                <div v-else class="space-y-2">
-                  <MapPin class="mx-auto mb-2 w-10 h-10 text-slate-300" />
-                  <p class="text-sm text-slate-600">正在嘗試取得您的位置...</p>
-                  <p class="text-[10px] text-slate-500">
-                    請於瀏覽器允許「位置存取」，以顯示與求助資訊的距離。
-                  </p>
-                </div>
-
-                <div v-if="userLocation && helpRequests.length > 0" class="mt-4 text-left space-y-2">
-                  <p class="text-xs font-medium text-slate-700">
-                    求助地點與距離（依照發布順序顯示）
-                  </p>
-                  <div v-for="req in helpRequests" :key="req.id"
-                    class="bg-white rounded-xl px-3 py-2 border border-slate-100 text-[10px]">
-                    <p class="font-semibold text-slate-900 text-xs mb-0.5">
-                      {{ req.title }}
-                    </p>
-                    <p class="flex items-center gap-1 text-slate-600 mb-0.5">
-                      <MapPin class="w-3 h-3 text-indigo-500" />
-                      {{ req.location }}
-                    </p>
-                    <p class="text-slate-500">
-                      約
-                      {{
-                        calculateDistance(
-                          userLocation.lat,
-                          userLocation.lng,
-                          req.lat,
-                          req.lng
-                        ).toFixed(2)
-                      }}
-                      公里
-                    </p>
-                  </div>
-                </div>
-
-                <div v-else-if="helpRequests.length === 0" class="pt-1">
-                  <p class="text-[10px] text-slate-500">
-                    尚無求助資料可顯示距離，請先於「發布求助」新增一筆資訊。
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
         </div>
       </main>
 
@@ -269,7 +203,12 @@
               <!-- 基本資訊：地點 / 距離 -->
               <section class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]">
                 <div class="flex items-start gap-2">
-                  <MapPin class="w-4 h-4 mt-0.5 text-indigo-500 shrink-0" />
+                  <Icon icon="fluent:location-20-filled"
+                      class="size-4"
+                      :class="[selectedRequest.urgency === '1' ? 'text-[#D45251]' : '',
+                      selectedRequest.urgency === '2' ? 'text-[#FD853A]' : '',
+                      selectedRequest.urgency === '3' ? 'text-[#F5BA4B]' : '']" 
+                    />
                   <div class="leading-relaxed">
                     <span class="font-medium text-slate-800">地點：</span>
                     <span class="text-slate-700">
@@ -452,7 +391,7 @@ const helpRequests = ref<HelpRequest[]>([
     timestamp: new Date().toLocaleString('zh-TW'),
     lat: 25.033,
     lng: 121.5654,
-    urgency: '2',
+    urgency: '3',
     isMine: false, // ✅ 這筆是「別人發的」，等等會變成黃底
     isResolved: false // ✅ 新增
   }
@@ -484,6 +423,20 @@ const urgencyOptions = [
     dotClass: 'bg-yellow-500'
   }
 ];
+
+const urgencyRank = (value?: string): number => {
+  switch (value) {
+    case '1':
+      return 1; // 極度緊急 → 排最前
+    case '2':
+      return 2; // 高度緊急
+    case '3':
+      return 3; // 中度緊急
+    default:
+      return 4; // 沒填或其他 → 排最後
+  }
+};
+
 
 const openRequest = (req: HelpRequest) => {
   // 計算距離（如果有 userLocation）
@@ -616,10 +569,11 @@ const toggleNearby = () => {
 };
 
 
-// 過濾顯示的求助資訊
 // const filteredRequests = computed(() => {
+//   let list = helpRequests.value.filter(req => !req.isResolved);
+
 //   if (showNearby.value && userLocation.value) {
-//     return helpRequests.value.filter((req) => {
+//     list = list.filter((req) => {
 //       const distance = calculateDistance(
 //         userLocation.value!.lat,
 //         userLocation.value!.lng,
@@ -629,34 +583,65 @@ const toggleNearby = () => {
 //       return distance <= 5;
 //     });
 //   }
-//   return helpRequests.value;
+
+//   // ✅ 自己發的先顯示在上面，其次再照 id（時間）排序
+//   return [...list].sort((a, b) => {
+//     if (a.isMine === b.isMine) {
+//       return b.id - a.id; // 新的在上面
+//     }
+//     return a.isMine ? -1 : 1; // true 在前面
+//   });
 // });
-// 點擊貼文開啟彈窗
 
 const filteredRequests = computed(() => {
+  // 1. 先排除已解決的
   let list = helpRequests.value.filter(req => !req.isResolved);
 
-  if (showNearby.value && userLocation.value) {
-    list = list.filter((req) => {
-      const distance = calculateDistance(
-        userLocation.value!.lat,
-        userLocation.value!.lng,
-        req.lat,
-        req.lng
-      );
-      return distance <= 5;
-    });
+  // 2. 如果有取得使用者位置，順便「加上距離」欄位，等等排序會用到
+  if (userLocation.value) {
+    const { lat, lng } = userLocation.value;
+    list = list.map(req => ({
+      ...req,
+      distanceKm: calculateDistance(lat, lng, req.lat, req.lng),
+    }));
   }
 
-  // ✅ 自己發的先顯示在上面，其次再照 id（時間）排序
+  // 3. 若目前是「只看附近」，就先把超過 5 公里以外的濾掉
+  if (showNearby.value && userLocation.value) {
+    list = list.filter(req => (req.distanceKm ?? Infinity) <= 5);
+  }
+
+  // 4. 排序邏輯：
+  //    (1) 自己發的在最前面
+  //    (2) 距離由近到遠
+  //    (3) 緊急程度：1 > 2 > 3 > 未填
+  //    (4) 同條件下，新的貼文在前（id 較大）
   return [...list].sort((a, b) => {
-    if (a.isMine === b.isMine) {
-      return b.id - a.id; // 新的在上面
+    // (1) 是否自己發的
+    if (a.isMine !== b.isMine) {
+      return a.isMine ? -1 : 1;
     }
-    return a.isMine ? -1 : 1; // true 在前面
+
+    // (2) 距離比較（只有在有 userLocation 時才比較）
+    if (userLocation.value) {
+      const da = a.distanceKm ?? Infinity;
+      const db = b.distanceKm ?? Infinity;
+      if (da !== db) {
+        return da - db; // 距離小的排前面
+      }
+    }
+
+    // (3) 緊急程度比較（1 最優先）
+    const ua = urgencyRank(a.urgency);
+    const ub = urgencyRank(b.urgency);
+    if (ua !== ub) {
+      return ua - ub; // rank 小的排前面
+    }
+
+    // (4) 最後用 id 當 tie-breaker：新貼文排前面
+    return b.id - a.id;
   });
 });
-
 
 
 const markAsResolved = (id: number) => {
