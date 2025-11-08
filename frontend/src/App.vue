@@ -217,7 +217,7 @@
                     {{ req.title }}
                   </h3>
                   <div class="flex flex-row gap-1">
-                    <div v-for="tag in req.labels" class="px-2 py-0.5 rounded-full border text-[10px] flex-shrink-0 transition-all whitespace-nowrap border-[#71C5D5] text-[#71C5D5]">
+                    <div v-for="tag in req.labels" class="px-2 py-0.5 rounded-full border text-[10px] flex-shrink-0 transition-all whitespace-nowrap border-[#71C5D5] text-[#71C5D5] ">
                       {{ tag }}
                     </div>
                   </div>

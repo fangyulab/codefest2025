@@ -67,7 +67,7 @@
   <transition name="fade">
       <div v-if="showLegend" class="space-y-1">
       <div class="flex items-center gap-2">
-          <span class="inline-flex w-3 h-3 rounded-full bg-emerald-500 border border-white shadow"></span>
+          <span class="inline-flex w-3 h-3 rounded-full bg-[#2563eb] border border-white shadow"></span>
           <span>我的位置</span>
       </div>
       <div class="flex items-center gap-2">
