@@ -1,10 +1,11 @@
 <!-- App.vue -->
 <template>
-  <div class="w-full h-screen text-slate-900 flex flex-col  items-center">
-    <div class="max-w-2xl w-screen bg-gray-50 h-full">
+  <div class="w-full h-screen text-slate-900 flex justify-center">
+    <div class="max-w-2xl w-full bg-gray-50 h-full flex flex-col">
+      <!-- main + nav -->
       <!-- 主內容 -->
-      <main class="w-full">
-        <div class="mx-auto px-4 pt-4 pb-24">
+      <main class="w-full flex-1 overflow-y-auto">
+        <div class="mx-auto px-4 pt-4 pb-28">
           <!-- 內容卡片 -->
 
           <!-- Tab 1: 發布求助表單 -->
@@ -89,7 +90,8 @@
             </div>
 
 
-            <button @click="handleSubmit" :disabled="isSubmitting" class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#71C5D5] text-white py-3
+            <button @click="handleSubmit" :disabled="isSubmitting"
+              class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[#71C5D5] text-white py-3
                       text-sm font-semibold shadow-sm active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               <Icon icon="streamline:send-email-solid" />
               {{ isSubmitting ? '發布中...' : '發布' }}
@@ -153,12 +155,9 @@
                 <!-- 地點與發佈時間 -->
                 <div class="flex flex-col text-[10px] text-slate-500">
                   <div class="flex items-center gap-1">
-                    <Icon icon="fluent:location-20-filled"
-                      class="size-4"
-                      :class="[req.urgency === 1 ? 'text-[#D45251]' : '',
-                      req.urgency === 2 ? 'text-[#FD853A]' : '',
-                      req.urgency === 3 ? 'text-[#F5BA4B]' : '']" 
-                    />
+                    <Icon icon="fluent:location-20-filled" class="size-4" :class="[req.urgency === 1 ? 'text-[#D45251]' : '',
+                    req.urgency === 2 ? 'text-[#FD853A]' : '',
+                    req.urgency === 3 ? 'text-[#F5BA4B]' : '']" />
                     <span>{{ req.locationText }}</span>
                   </div>
                   <div class="text-[9px] text-slate-400 mt-0.5">
@@ -210,12 +209,9 @@
               <!-- 基本資訊：地點 / 距離 -->
               <section class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]">
                 <div class="flex items-start gap-2">
-                  <Icon icon="fluent:location-20-filled"
-                      class="size-4"
-                      :class="[selectedRequest.urgency === 1 ? 'text-[#D45251]' : '',
-                      selectedRequest.urgency === 2 ? 'text-[#FD853A]' : '',
-                      selectedRequest.urgency === 3 ? 'text-[#F5BA4B]' : '']" 
-                    />
+                  <Icon icon="fluent:location-20-filled" class="size-4" :class="[selectedRequest.urgency === 1 ? 'text-[#D45251]' : '',
+                  selectedRequest.urgency === 2 ? 'text-[#FD853A]' : '',
+                  selectedRequest.urgency === 3 ? 'text-[#F5BA4B]' : '']" />
                   <div class="leading-relaxed">
                     <span class="font-medium text-slate-800">地點：</span>
                     <span class="text-slate-700">
@@ -265,6 +261,15 @@
               <button @click="markAsResolved(selectedRequest.id)" :disabled="isResolving"
                 class="w-full py-4 text-sm font-medium text-slate-700 tracking-tight active:scale-[0.99] transition-all rounded-b-3xl disabled:opacity-50 disabled:cursor-not-allowed">
                 {{ isResolving ? '處理中...' : '標記為已解決' }}
+              </button>
+            </div>
+
+            <!-- 別人的貼文 -->
+            <div v-else
+              class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-[#DBF1F5]/50 backdrop-blur-sm rounded-b-3xl">
+              <button @click="helpRequest(selectedRequest.id)" :disabled="isHelping"
+                class="w-full py-4 text-sm font-medium text-[#356C77] tracking-tight active:scale-[0.99] transition-all rounded-b-3xl disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ isHelping ? '通知中...' : '我要幫助他' }}
               </button>
             </div>
           </div>
@@ -342,18 +347,18 @@ const fetchPosts = async () => {
     const params = new URLSearchParams({
       user_id: String(CURRENT_USER_ID)
     });
-    
+
     if (userLocation.value) {
       params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
     }
-    
+
     if (showNearby.value) {
       params.append('distance', '5');
     }
 
     const response = await fetch(`${API_BASE_URL}/posts?${params}`);
     const data = await response.json();
-    
+
     if (data.success) {
       helpRequests.value = data.posts.map((post: any) => ({
         id: post.id,
@@ -386,7 +391,7 @@ const fetchPosts = async () => {
 const createPost = async () => {
   try {
     isSubmitting.value = true;
-    
+
     if (!userLocation.value) {
       showToast('無法取得您的位置，請確認已允許定位');
       return;
@@ -409,20 +414,20 @@ const createPost = async () => {
     });
 
     const data = await response.json();
-    
+
     if (data.success) {
       showToast('求助資訊已發布');
-      
+
       // 清空表單
       formData.title = '';
       formData.content = '';
       formData.location = '';
       formData.contact = '';
       formData.urgency = 0;
-      
+
       // 重新載入貼文列表
       await fetchPosts();
-      
+
       // 切換到列表頁
       activeTab.value = 1;
     } else {
@@ -439,7 +444,7 @@ const createPost = async () => {
 const resolvePost = async (postId: number) => {
   try {
     isResolving.value = true;
-    
+
     const response = await fetch(`${API_BASE_URL}/posts/${postId}/resolve`, {
       method: 'POST',
       headers: {
@@ -451,7 +456,7 @@ const resolvePost = async (postId: number) => {
     });
 
     const data = await response.json();
-    
+
     if (data.success) {
       showToast('貼文已標記為已解決');
       closeRequest();
@@ -486,6 +491,7 @@ const isModalOpen = ref(false);
 const isLoading = ref(false);
 const isSubmitting = ref(false);
 const isResolving = ref(false);
+const isHelping = ref(false);
 
 let toastTimer: number | null = null;
 
@@ -520,10 +526,10 @@ const openRequest = async (req: HelpRequest) => {
     if (userLocation.value) {
       params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
     }
-    
+
     const response = await fetch(`${API_BASE_URL}/posts/${req.id}?${params}`);
     const data = await response.json();
-    
+
     if (data.success) {
       selectedRequest.value = {
         ...data.post,
@@ -616,7 +622,7 @@ const handleSubmit = async () => {
     showToast('請填寫所有必填欄位');
     return;
   }
-  
+
   if (!formData.urgency) {
     showToast('請選擇緊急程度');
     return;
