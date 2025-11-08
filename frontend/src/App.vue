@@ -296,6 +296,13 @@
               尚未選取任何求助貼文
             </div>
 
+            <!-- 在聯絡方式區塊後面添加 -->
+            <div v-if="selectedRequest.helper_count && selectedRequest.helper_count > 0" 
+                class="flex items-center gap-2 text-[12px] text-slate-600">
+              <Icon icon="mdi:account-multiple" class="size-4" />
+              <span>{{ selectedRequest.helper_count }} 人表示願意提供協助</span>
+            </div>
+
             <!-- ✅ 只有自己的貼文才顯示 -->
             <div v-if="selectedRequest?.isMine"
               class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-white/30 backdrop-blur-sm rounded-b-3xl">
@@ -513,6 +520,7 @@ const resolvePost = async (postId: number) => {
   }
 };
 
+<<<<<<< HEAD
 
 // 篩選用 tags
 const districtTags = [
@@ -538,6 +546,44 @@ const selectedDistrict = ref<string>('all');
 const selectedIncident = ref<string>('all');
 
 
+=======
+const helpRequest = async (postId: number) => {
+  try {
+    isHelping.value = true;
+
+    const response = await fetch(`${API_BASE_URL}/posts/${postId}/respond`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user_id: CURRENT_USER_ID
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showToast('已通知求助者，感謝您的幫助！');
+      
+      // 更新當前顯示的 helper_count
+      if (selectedRequest.value) {
+        selectedRequest.value.helper_count = data.helper_count;
+      }
+      
+      // 重新載入貼文列表
+      await fetchPosts();
+    } else {
+      showToast(data.message || '操作失敗，請稍後再試');
+    }
+  } catch (error) {
+    console.error('回應失敗:', error);
+    showToast('操作失敗，請稍後再試');
+  } finally {
+    isHelping.value = false;
+  }
+};
+>>>>>>> ad13b9b5d4bba023b8fd48177bdfde650581f189
 
 // ==================== 狀態管理 ====================
 const selectedRequest = ref<HelpRequest | null>(null);
