@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "vite build",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@iconify/vue": "^5.0.0",
+    "axios": "^1.13.2",
     "leaflet": "^1.9.4",
     "lucide-vue-next": "^0.553.0",
     "pinia": "^3.0.4",
