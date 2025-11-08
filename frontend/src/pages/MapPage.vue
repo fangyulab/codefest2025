@@ -120,61 +120,6 @@
       </div>
     </div>
 
-    <!-- 點 marker 後的詳情彈窗 -->
-    <transition name="fade">
-      <div
-        v-if="selectedRequest"
-        class="fixed inset-0 z-50 flex items-center justify-center"
-      >
-        <!-- 背景遮罩 -->
-        <div @click="closeSelectedRequest" />
-
-        <!-- 詳情卡片 -->
-        <div
-        >
-          <div class="flex items-start justify-between gap-3 mb-1">
-            <h3 class="text-lg font-semibold text-slate-900">
-              {{ selectedRequest.title }}
-            </h3>
-            <button
-              class="text-xs px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200"
-              @click="closeSelectedRequest"
-            >
-              關閉
-            </button>
-          </div>
-
-          <div class="space-y-1 text-xs text-slate-600">
-            <div class="flex items-center gap-1">
-              <MapPin class="w-4 h-4" />
-              <span>{{ selectedRequest.location }}</span>
-            </div>
-            <div class="text-[11px] text-slate-400">
-              {{ selectedRequest.timestamp }}
-            </div>
-            <div v-if="selectedRequest.distanceKm !== undefined" class="text-[11px] text-slate-500">
-              距離約 {{ selectedRequest.distanceKm.toFixed(1) }} 公里
-            </div>
-            <div v-if="selectedRequest.urgency" class="text-[11px] text-red-500">
-              緊急程度：{{ selectedRequest.urgency }}
-            </div>
-          </div>
-
-          <div v-if="selectedRequest.content" class="border-t border-slate-100 pt-3 text-xs text-slate-800">
-            <p class="whitespace-pre-line leading-relaxed">
-              {{ selectedRequest.content }}
-            </p>
-          </div>
-
-          <div v-if="selectedRequest.contact" class="space-y-1 pt-2">
-            <div class="text-[11px] text-slate-500">聯絡方式</div>
-            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs break-words">
-              {{ selectedRequest.contact }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </transition>
   </div>
 </template>
 
