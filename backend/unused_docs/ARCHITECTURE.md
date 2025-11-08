@@ -15,7 +15,7 @@ graph TB
     end
     
     subgraph 後端 API
-        G[Flask Server<br/>127.0.0.1:5000]
+        G[Flask Server<br/>127.0.0.1:8080]
         G --> H[登入 API]
         G --> I[貼文 API]
         G --> J[回應 API]

@@ -4,7 +4,7 @@
 
 ### 後端 (Flask)
 - 位置: `app.py`
-- 運行於: `http://127.0.0.1:5000`
+- 運行於: `http://127.0.0.1:8080`
 - 資料儲存: 使用 txt 檔案 (users.txt, posts.txt, responses.txt)
 
 ### 前端 (React)
@@ -26,10 +26,10 @@ pip install -r requirements.txt --break-system-packages
 ```bash
 python app.py
 ```
-後端會在 `http://127.0.0.1:5000` 啟動
+後端會在 `http://127.0.0.1:8080` 啟動
 
 ### 3. 啟動前端 (開啟 frontend.html)
-在瀏覽器中開啟 `frontend/frontend.html` 檔案
+在瀏覽器中開啟 `backend/test_frontend/frontend.html` 檔案
 
 ## 功能說明
 

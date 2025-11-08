@@ -51,7 +51,7 @@ pip install -r requirements.txt --break-system-packages
 python app.py
 ```
 
-後端會在 `http://127.0.0.1:5000` 啟動
+後端會在 `http://127.0.0.1:8080` 啟動
 
 ### 第二步：開啟前端
 
@@ -92,14 +92,14 @@ python app.py
 
 ### 登入
 ```bash
-curl -X POST http://127.0.0.1:5000/api/login \
+curl -X POST http://127.0.0.1:8080/api/login \
   -H "Content-Type: application/json" \
   -d '{"username": "test_user"}'
 ```
 
 ### 建立貼文
 ```bash
-curl -X POST http://127.0.0.1:5000/api/posts \
+curl -X POST http://127.0.0.1:8080/api/posts \
   -H "Content-Type: application/json" \
   -d '{
     "user_id": 1,
@@ -114,7 +114,7 @@ curl -X POST http://127.0.0.1:5000/api/posts \
 
 ### 查詢貼文
 ```bash
-curl "http://127.0.0.1:5000/api/posts?user_id=1&location=25.0330,121.5654&distance=5"
+curl "http://127.0.0.1:8080/api/posts?user_id=1&location=25.0330,121.5654&distance=5"
 ```
 
 ## 🔧 自訂設定
@@ -141,7 +141,7 @@ const [userLocation, setUserLocation] = useState('25.0330,121.5654');
 ### 問題 1: 前端無法連線後端
 **解決方案:**
 1. 確認後端正在運行
-2. 檢查是否在 `http://127.0.0.1:5000`
+2. 檢查是否在 `http://127.0.0.1:8080`
 3. 查看瀏覽器 Console 的錯誤訊息
 
 ### 問題 2: 看不到其他人的貼文

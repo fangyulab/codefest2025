@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Home, List, MapPin, LogOut, Send, AlertCircle, Clock, Phone } from 'lucide-react';
 
-const API_BASE = 'http://127.0.0.1:5000/api';
+const API_BASE = 'http://127.0.0.1:8080/api';
 
 // 登入頁面
 function LoginPage({ onLogin }) {
