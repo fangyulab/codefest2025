@@ -484,7 +484,7 @@ const formData = reactive({
 });
 
 const helpRequests = ref<HelpRequest[]>([]);
-const showNearby = ref(false);
+const showNearby = ref(true);
 const userLocation = ref<UserLocation | null>(null);
 const toastMessage = ref<string | null>(null);
 const isModalOpen = ref(false);
