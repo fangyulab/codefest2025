@@ -307,7 +307,19 @@ import MapPage from './pages/MapPage.vue';
 
 // ==================== API 配置 ====================
 const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
-const CURRENT_USER_ID = 1; // 寫死的使用者 ID，之後再實作登入功能
+const CURRENT_USER_ID = ref<number | null>(null);// 寫死的使用者 ID，之後再實作登入功能
+
+const initializeUserId = () => {
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const userIdFromUrl = urlParams.get('user_id');
+  
+  if (userIdFromUrl) {
+    CURRENT_USER_ID.value = parseInt(userIdFromUrl);
+    console.log('User ID from URL:', CURRENT_USER_ID.value);
+    return;
+  }
+}
 
 // ==================== 型別定義 ====================
 interface HelpRequest {
@@ -548,6 +560,10 @@ const closeRequest = () => {
 
 // 取得使用者位置
 onMounted(() => {
+  // 先初始化 User ID
+  initializeUserId();
+
+  // 取得使用者位置
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -555,17 +571,14 @@ onMounted(() => {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
-        // 取得位置後載入貼文
         fetchPosts();
       },
       () => {
         console.log('無法獲取位置');
-        // 即使沒有位置也載入貼文
         fetchPosts();
       }
     );
   } else {
-    // 即使沒有位置也載入貼文
     fetchPosts();
   }
 });
