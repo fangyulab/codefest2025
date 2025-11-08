@@ -18,6 +18,7 @@
 
 ### 1. 安裝 Python 套件
 ```bash
+cd backend
 pip install -r requirements.txt --break-system-packages
 ```
 
@@ -28,7 +29,7 @@ python app.py
 後端會在 `http://127.0.0.1:5000` 啟動
 
 ### 3. 啟動前端 (開啟 frontend.html)
-在瀏覽器中開啟 `frontend.html` 檔案
+在瀏覽器中開啟 `frontend/frontend.html` 檔案
 
 ## 功能說明
 
