@@ -37,9 +37,7 @@
                 <label class="block text-xs font-medium text-slate-700 mb-1.5">聯絡方式（選填）</label>
                 <input type="text" v-model="formData.contact" class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50/80
                           focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400
-                          placeholder:text-slate-300 transition-all"
-                  placeholder="手機、LINE ID 或其他安全聯絡方式"
-                />
+                          placeholder:text-slate-300 transition-all" placeholder="手機、LINE ID 或其他安全聯絡方式" />
               </div>
             </div>
 
@@ -49,23 +47,15 @@
                 緊急程度
               </div>
               <div class="mt-2 grid grid-cols-3 gap-2 text-[10px]">
-                <button
-                  v-for="option in urgencyOptions"
-                  :key="option.value"
-                  type="button"
-                  @click="formData.urgency = option.value"
-                  :class="[
+                <button v-for="option in urgencyOptions" :key="option.value" type="button"
+                  @click="formData.urgency = option.value" :class="[
                     'flex flex-col items-start justify-center px-2.5 py-2 rounded-2xl border transition-all h-full',
                     formData.urgency === option.value
                       ? option.activeClass
                       : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                  ]"
-                >
+                  ]">
                   <div class="flex items-center gap-1.5 mb-0.5">
-                    <span
-                      class="w-1.5 h-1.5 rounded-full"
-                      :class="option.dotClass"
-                    ></span>
+                    <span class="w-1.5 h-1.5 rounded-full" :class="option.dotClass"></span>
                     <span class="font-semibold tracking-tight">
                       {{ option.label }}
                     </span>
@@ -79,17 +69,14 @@
           </div>
 
 
-          <button
-            @click="handleSubmit"
-            class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white py-3
-                    text-sm font-semibold shadow-sm hover:bg-indigo-700 active:scale-[0.99] transition-all"
-          >
+          <button @click="handleSubmit" class="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white py-3
+                    text-sm font-semibold shadow-sm hover:bg-indigo-700 active:scale-[0.99] transition-all">
             <Send class="w-4 h-4" />
             發布求助資訊
           </button>
           <p class="text-[10px] text-slate-400 leading-relaxed">
             *本平台之所有貼文雖以匿名方式公開顯示，但系統內部仍保留使用者之實名制註冊資料，以確保必要時可追溯來源。
-若經查證有違規行為，本平台有權依規定採取相應措施，並配合相關單位進行調查。
+            若經查證有違規行為，本平台有權依規定採取相應措施，並配合相關單位進行調查。
           </p>
         </section>
 
@@ -103,10 +90,10 @@
             </h2>
             <div class="flex items-center gap-2">
               <button @click="toggleNearby" :class="[
-                'px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1',
+                'px-3 py-1.5 rounded-full text-xs font-medium  transition-all flex items-center gap-1',
                 showNearby
-                  ? 'bg-indigo-50 text-indigo-600 border-indigo-200 shadow-[0_0_0_1px_rgba(79,70,229,0.08)]'
-                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  ? 'bg-indigo-50 text-indigo-600  shadow-[0_0_0_1px_rgba(79,70,229,0.08)]'
+                  : 'bg-slate-50 text-slate-600  hover:bg-slate-100'
               ]">
                 <MapPin class="w-3 h-3" />
                 {{ showNearby ? '僅顯示附近 5 公里' : '顯示所有求助' }}
@@ -125,12 +112,15 @@
           </div>
 
           <!-- 列表 -->
-          <div v-else class="space-y-4">
-            <article v-for="req in filteredRequests" :key="req.id" class="rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-4 hover:bg-white hover:shadow-sm
-         transition-all cursor-pointer leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              @click="openRequest(req)" @keydown.enter.prevent="openRequest(req)" role="button" tabindex="0">
-              <!-- 事件標題 -->
-              <h3 class="font-semibold text-sm text-slate-900 mb-2">
+          <div v-else class="flex flex-col gap-3 px-4 py-6">
+            <article v-for="req in filteredRequests" :key="req.id" :class="[
+              'rounded-3xl px-5 py-4 border shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all cursor-pointer leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500 hover:shadow-md',
+              req.isMine
+                ? 'bg-[#DBF1F5] border-[#B4E2EA]'
+                : 'bg-[#FCF2DF] border-[#F8E3BC]'
+            ]" @click="openRequest(req)" @keydown.enter.prevent="openRequest(req)" role="button" tabindex="0">
+              <!-- 標題 -->
+              <h3 class="font-semibold text-sm text-slate-900 mb-3">
                 {{ req.title }}
               </h3>
 
@@ -212,13 +202,17 @@
       </div>
     </main>
 
-    <!-- 求助詳細內容彈窗（先做空白卡片） -->
     <!-- 求助詳細內容彈窗 -->
     <transition name="fade-up">
       <div v-if="isModalOpen"
         class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
         @click.self="closeRequest">
-        <div class="w-full max-w-md mx-4 rounded-2xl bg-white shadow-xl border border-slate-200 p-6 relative">
+        <div :class="[
+          'w-full max-w-md mx-4 rounded-3xl shadow-xl p-6 relative border transition-all',
+          selectedRequest?.isMine
+            ? 'bg-[#DBF1F5] border-[#B4E2EA]'
+            : 'bg-[#FCF2DF] border-[#F8E3BC]'
+        ]">
           <!-- 關閉按鈕 -->
           <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
             @click="closeRequest" aria-label="close">
@@ -236,13 +230,6 @@
                 發布時間：{{ selectedRequest.timestamp }}
               </p>
             </header>
-
-            <!-- 求助內容 -->
-            <section class="space-y-1">
-              <p class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700">
-                {{ selectedRequest.content }}
-              </p>
-            </section>
 
             <!-- 基本資訊：地點 / 距離 -->
             <section class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]">
@@ -274,23 +261,39 @@
             </section>
 
 
-
-            <!-- 聯絡方式（如果有填） -->
-            <p class="font-medium text-slate-800">聯絡方式：</p>
-            <section v-if="selectedRequest.contact"
-              class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 space-y-1.5 text-[12px]">
-              <p class="text-slate-700 break-words">
-                {{ selectedRequest.contact }}
-              </p>
-              <p class="text-[10px] text-slate-400">
-                請自行斟酌聯絡與資訊安全，避免提供過多個資。
+            <!-- 求助內容 -->
+            <section class="space-y-1">
+              <p class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700">
+                {{ selectedRequest.content }}
               </p>
             </section>
+
+
+
+            <!-- 聯絡方式（如果有填） -->
+            <div v-if="selectedRequest.contact" class="flex flex-wrap items-center gap-2 text-[13px] text-slate-700">
+              <p class="font-medium text-slate-800 m-0">聯絡方式：</p>
+              <p class="break-words">
+                {{ selectedRequest.contact }}
+              </p>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1">
+              請自行斟酌聯絡與資訊安全，避免提供過多個資。
+            </p>
           </div>
 
           <!-- 保險 fallback -->
           <div v-else class="h-32 flex items-center justify-center text-xs text-slate-400">
             尚未選取任何求助貼文
+          </div>
+
+          <!-- ✅ 只有自己的貼文才顯示 -->
+          <div v-if="selectedRequest?.isMine"
+            class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-white/30 backdrop-blur-sm rounded-b-3xl">
+            <button @click="markAsResolved(selectedRequest.id)"
+              class="w-full py-4 text-sm font-medium text-slate-700 tracking-tight active:scale-[0.99] transition-all rounded-b-3xl">
+              標記為已解決
+            </button>
           </div>
         </div>
       </div>
@@ -344,6 +347,8 @@ interface HelpRequest {
   timestamp: string;
   lat: number;
   lng: number;
+  isMine: boolean; // ✅ 新增：是不是我自己發的
+  isResolved: boolean; // ✅ 新增
 }
 
 interface UserLocation {
@@ -358,7 +363,37 @@ const formData = reactive({
   location: '',
   contact: ''
 });
-const helpRequests = ref<HelpRequest[]>([]);
+//const helpRequests = ref<HelpRequest[]>([]);
+
+const helpRequests = ref<HelpRequest[]>([
+  {
+    id: 1,
+    title: '（範例）鄰居需要幫忙搬東西',
+    content: '幫忙把幾箱物資搬到一樓電梯口，預計 19:00 前完成即可，謝謝。',
+    location: '台北市信義區光復南路附近',
+    contact: 'line：neighbor-help',
+    timestamp: new Date().toLocaleString('zh-TW'),
+    lat: 25.033,
+    lng: 121.5654,
+    isMine: false, // ✅ 這筆是「別人發的」，等等會變成黃底
+    isResolved: false // ✅ 新增
+  },
+
+
+  {
+    id: 2,
+    title: '（範例）鄰居需要幫忙搬東西',
+    content: '幫忙把幾箱物資搬到一樓電梯口，預計 19:00 前完成即可，謝謝。',
+    location: '台北市信義區光復南路附近',
+    contact: 'line：neighbor-help',
+    timestamp: new Date().toLocaleString('zh-TW'),
+    lat: 26.033,
+    lng: 123.5654,
+    isMine: false, // ✅ 這筆是「別人發的」，等等會變成黃底
+    isResolved: false // ✅ 新增
+  }
+]);
+
 const showNearby = ref(false);
 const userLocation = ref<UserLocation | null>(null);
 const toastMessage = ref<string | null>(null);
@@ -433,6 +468,7 @@ const handleSubmit = () => {
     timestamp: new Date().toLocaleString('zh-TW'),
     lat,
     lng
+    , isMine: true // ✅ 自己送出的永遠標記為「我發的」
   };
 
   helpRequests.value = [newRequest, ...helpRequests.value];
@@ -444,6 +480,13 @@ const handleSubmit = () => {
 
   showToast('求助資訊已發布');
   activeTab.value = 1;
+
+  // ✅ 標記為已解決 → 移除該筆貼文
+  const markAsResolved = (id: number) => {
+    helpRequests.value = helpRequests.value.filter(req => req.id !== id);
+    closeRequest();
+    showToast('貼文已標記為已解決');
+  };
 };
 
 // 切換附近 5 公里
@@ -453,9 +496,26 @@ const toggleNearby = () => {
 
 
 // 過濾顯示的求助資訊
+// const filteredRequests = computed(() => {
+//   if (showNearby.value && userLocation.value) {
+//     return helpRequests.value.filter((req) => {
+//       const distance = calculateDistance(
+//         userLocation.value!.lat,
+//         userLocation.value!.lng,
+//         req.lat,
+//         req.lng
+//       );
+//       return distance <= 5;
+//     });
+//   }
+//   return helpRequests.value;
+// });
+
 const filteredRequests = computed(() => {
+  let list = helpRequests.value.filter(req => !req.isResolved);
+
   if (showNearby.value && userLocation.value) {
-    return helpRequests.value.filter((req) => {
+    list = list.filter((req) => {
       const distance = calculateDistance(
         userLocation.value!.lat,
         userLocation.value!.lng,
@@ -465,8 +525,16 @@ const filteredRequests = computed(() => {
       return distance <= 5;
     });
   }
-  return helpRequests.value;
+
+  // ✅ 自己發的先顯示在上面，其次再照 id（時間）排序
+  return [...list].sort((a, b) => {
+    if (a.isMine === b.isMine) {
+      return b.id - a.id; // 新的在上面
+    }
+    return a.isMine ? -1 : 1; // true 在前面
+  });
 });
+
 
 // Tabs
 const tabs = [
@@ -475,6 +543,14 @@ const tabs = [
   { name: '地圖定位', icon: Map }
 ];
 
+const markAsResolved = (id: number) => {
+  const target = helpRequests.value.find(req => req.id === id);
+  if (target) {
+    target.isResolved = true; // ✅ 標記為已解決，會觸發 transition-group 的離場動畫
+  }
+  closeRequest();
+  showToast('貼文已標記為已解決');
+};
 
 // 點擊貼文開啟彈窗
 const openRequest = (req: HelpRequest) => {
@@ -501,5 +577,17 @@ const closeRequest = () => {
 .fade-up-leave-to {
   opacity: 0;
   transform: translate(-50%, 8px);
+}
+
+/* 卡片列表淡入淡出 */
+.card-fade-enter-active,
+.card-fade-leave-active {
+  transition: all 0.25s ease;
+}
+
+.card-fade-enter-from,
+.card-fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
 }
 </style>
