@@ -20,11 +20,12 @@
 1. Leaflet (地圖)
 
 ## 競品
-    - 警政署 110 報案 App (Video 119 App)
-    - HKSOS (香港)
-    - Neighbors by Ring 、 Safety Now Community(美國)
-        - 功能非常像 (?)
-    - ...
+
+- 警政署 110 報案 App (Video 119 App)
+- HKSOS (香港)
+- Neighbors by Ring 、 Safety Now Community(美國)
+  - 功能非常像 (?)
+- ...
 
 ## 評分依據
 
