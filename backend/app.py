@@ -327,6 +327,6 @@ def get_map_data():
 
 if __name__ == '__main__':
     init_files()
-    print("🚀 後端伺服器啟動於 http://127.0.0.1:5000")
-    print("=" * 50)
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 8080))
+    print(f"🚀 後端伺服器啟動於 0.0.0.0:{port}")
+    app.run(host='0.0.0.0', port=port)
