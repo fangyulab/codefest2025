@@ -14,6 +14,8 @@
 - Mission (第二頁) 可以參考 "Dcard / 小雞上工 / 政大通(?)" 做 新功能發想
     - 結合 "LLM"？ e.g. 對任務的 AI Summary? 藉此 調整 (校正回歸) mission prior?
 - 考慮 套用 政府 Opendata "資料" 到我們的 feature (評分項中有"資料"，建議做)
+- https://docs.google.com/document/d/1ed64Nx0PVHr7iNeUJFrd_oJo2Zxsy1Hfieo-Pbo_-Io/edit?tab=t.nvw4upxhpnu9#heading=h.czm4igt8y96w
+    - 也有些 Idea 在這份 Docs 分頁 裡面
 
 ## 開源技術使用
 
