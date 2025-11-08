@@ -3,6 +3,8 @@
     <!-- 主內容 -->
     <main class="flex-1 w-full">
       <div class="max-w-4xl mx-auto px-4 pt-4 pb-24">
+        <!-- 內容卡片 -->
+
         <!-- Tab 1: 發布求助表單 -->
         <section v-if="activeTab === 0" class="flex flex-col gap-3 space-y-5">
           <div class="flex flex-wrap items-center justify-between gap-3 m-8">
@@ -122,7 +124,7 @@
           </button>
           <p class="text-[10px] text-slate-400 leading-relaxed">
             *本平台之所有貼文雖以匿名方式公開顯示，但系統內部仍保留使用者之實名制註冊資料，以確保必要時可追溯來源。
-若經查證有違規行為，本平台有權依規定採取相應措施，並配合相關單位進行調查。
+            若經查證有違規行為，本平台有權依規定採取相應措施，並配合相關單位進行調查。
           </p>
         </section>
 
@@ -136,10 +138,10 @@
             </h2>
             <div class="flex items-center gap-2">
               <button @click="toggleNearby" :class="[
-                'px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1',
+                'px-3 py-1.5 rounded-full text-xs font-medium  transition-all flex items-center gap-1',
                 showNearby
-                  ? 'bg-indigo-50 text-indigo-600 border-indigo-200 shadow-[0_0_0_1px_rgba(79,70,229,0.08)]'
-                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  ? 'bg-indigo-50 text-indigo-600  shadow-[0_0_0_1px_rgba(79,70,229,0.08)]'
+                  : 'bg-slate-50 text-slate-600  hover:bg-slate-100'
               ]">
                 <MapPin class="w-3 h-3" />
                 {{ showNearby ? '僅顯示附近 5 公里' : '顯示所有求助' }}
@@ -153,17 +155,20 @@
           <!-- 無資料時 -->
           <div v-if="filteredRequests.length === 0" class="text-center py-10 px-6 text-slate-400">
             <Users class="mx-auto mb-4 w-12 h-12 opacity-40" />
-            <p class="text-sm">目前尚無求助資訊</p>
+            <p class="text-base">目前尚無求助資訊</p>
             <p class="text-[10px] mt-1">前往「發布求助」頁籤建立第一筆需求 🌱</p>
           </div>
 
           <!-- 列表 -->
-          <div v-else class="space-y-4">
-            <article v-for="req in filteredRequests" :key="req.id" class="rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-4 hover:bg-white hover:shadow-sm
-         transition-all cursor-pointer leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              @click="openRequest(req)" @keydown.enter.prevent="openRequest(req)" role="button" tabindex="0">
-              <!-- 事件標題 -->
-              <h3 class="font-semibold text-sm text-slate-900 mb-2">
+          <div v-else class="flex flex-col gap-3 px-4 py-6">
+            <article v-for="req in filteredRequests" :key="req.id" :class="[
+              'rounded-3xl px-5 py-4 border shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all cursor-pointer leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500 hover:shadow-md',
+              req.isMine
+                ? 'bg-[#DBF1F5] border-[#B4E2EA]'
+                : 'bg-[#FCF2DF] border-[#F8E3BC]'
+            ]" @click="openRequest(req)" @keydown.enter.prevent="openRequest(req)" role="button" tabindex="0">
+              <!-- 標題 -->
+              <h3 class="font-semibold text-sm text-slate-900 mb-3">
                 {{ req.title }}
               </h3>
 
@@ -179,88 +184,6 @@
               </div>
             </article>
           </div>
-          <!-- 詳細內容彈窗 -->
-          <transition name="fade">
-            <div v-if="selectedRequest" class="fixed inset-0 z-50" role="dialog" aria-modal="true"
-              aria-labelledby="req-title">
-              <!-- 背景遮罩 -->
-              <div class="absolute inset-0 bg-black/40" @click="closeRequest"></div>
-
-              <!-- 內容面板：手機底部抽屜、桌機置中卡片 -->
-              <div class="absolute inset-x-0 bottom-0 md:inset-auto md:top-1/2 md:left-1/2
-             md:-translate-x-1/2 md:-translate-y-1/2 md:w-[680px]
-             bg-white rounded-t-2xl md:rounded-2xl shadow-xl
-             p-6 max-h-[85vh] overflow-y-auto">
-                <!-- 標題列 -->
-                <div class="flex items-start justify-between gap-4 mb-4">
-                  <h3 id="req-title" class="text-lg sm:text-xl font-semibold text-slate-900">
-                    {{ selectedRequest.title }}
-                  </h3>
-                  <button @click="closeRequest" class="rounded-lg px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200">
-                    關閉
-                  </button>
-                </div>
-
-                <!-- 重要資訊列 -->
-                <div class="flex flex-wrap items-center gap-2 text-xs text-slate-600 mb-3">
-                  <div class="flex items-center gap-1">
-                    <MapPin class="w-4 h-4" />
-                    <span>{{ selectedRequest.location }}</span>
-                  </div>
-                  <span class="text-slate-300">•</span>
-                  <span class="text-slate-500">{{ selectedRequest.timestamp }}</span>
-
-                  <template v-if="selectedRequest.distanceKm !== undefined">
-                    <span class="text-slate-300">•</span>
-                    <span>距離約 {{ selectedRequest.distanceKm.toFixed(1) }} 公里</span>
-                  </template>
-
-                  <template v-if="selectedRequest.urgency">
-                    <span class="text-slate-300">•</span>
-                    <span class="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-red-600">
-                      緊急：{{ selectedRequest.urgency }}
-                    </span>
-                  </template>
-
-                  <template v-if="selectedRequest.label">
-                    <span class="text-slate-300">•</span>
-                    <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-indigo-600">
-                      {{ selectedRequest.label }}
-                    </span>
-                  </template>
-                </div>
-
-                <!-- 內文 -->
-                <div v-if="selectedRequest.content" class="prose prose-sm max-w-none text-slate-800">
-                  <p class="whitespace-pre-line">{{ selectedRequest.content }}</p>
-                </div>
-
-                <!-- 聯絡方式 -->
-                <div v-if="selectedRequest.contact" class="mt-6">
-                  <div class="text-xs text-slate-500 mb-1">聯絡方式</div>
-                  <div class="rounded-lg border border-slate-200 p-3 break-words text-slate-800 bg-slate-50">
-                    {{ selectedRequest.contact }}
-                  </div>
-                </div>
-
-                <!-- 行動按鈕 -->
-                <div class="mt-6 flex items-center justify-end gap-3">
-                  <button @click="closeRequest" class="rounded-lg px-4 py-2 bg-slate-100 hover:bg-slate-200">
-                    先看看
-                  </button>
-                  <a v-if="selectedRequest.contact && selectedRequest.contact.startsWith('tel:')"
-                    :href="selectedRequest.contact"
-                    class="rounded-lg px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700">
-                    直接撥打
-                  </a>
-                  <button v-else class="rounded-lg px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700">
-                    我可以幫忙
-                  </button>
-                </div>
-              </div>
-            </div>
-          </transition>
-
         </section>
 
         <!-- Tab 3: 地圖定位 -->
@@ -327,6 +250,104 @@
       </div>
     </main>
 
+    <!-- 求助詳細內容彈窗 -->
+    <transition name="fade-up">
+      <div v-if="isModalOpen"
+        class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
+        @click.self="closeRequest">
+        <div :class="[
+          'w-full max-w-md mx-4 rounded-3xl shadow-xl p-6 relative border transition-all',
+          selectedRequest?.isMine
+            ? 'bg-[#DBF1F5] border-[#B4E2EA]'
+            : 'bg-[#FCF2DF] border-[#F8E3BC]'
+        ]">
+          <!-- 關閉按鈕 -->
+          <button class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+            @click="closeRequest" aria-label="close">
+            <Icon icon="mdi:close" class="w-5 h-5" />
+          </button>
+
+          <!-- 內容區：顯示被點擊的求助 -->
+          <div v-if="selectedRequest" class="flex flex-col gap-5 text-sm text-slate-800">
+            <!-- 標題 + 時間 -->
+            <header class="space-y-1 pr-6">
+              <h3 class="text-base font-semibold text-slate-900 leading-snug">
+                {{ selectedRequest.title }}
+              </h3>
+              <p class="text-[11px] text-slate-400">
+                發布時間：{{ selectedRequest.timestamp }}
+              </p>
+            </header>
+
+            <!-- 基本資訊：地點 / 距離 -->
+            <section class="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-3 space-y-2 text-[12px]">
+              <div class="flex items-start gap-2">
+                <MapPin class="w-4 h-4 mt-0.5 text-indigo-500 shrink-0" />
+                <div class="leading-relaxed">
+                  <span class="font-medium text-slate-800">地點：</span>
+                  <span class="text-slate-700">
+                    {{ selectedRequest.location }}
+                  </span>
+                </div>
+              </div>
+
+              <div v-if="userLocation" class="flex items-center gap-2 pl-6 text-[11px]">
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium">
+                  約
+                  {{
+                    calculateDistance(
+                      userLocation.lat,
+                      userLocation.lng,
+                      selectedRequest.lat,
+                      selectedRequest.lng
+                    ).toFixed(2)
+                  }}
+                  公里內
+                </span>
+              </div>
+            </section>
+
+
+            <!-- 求助內容 -->
+            <section class="space-y-1">
+              <p class="text-[13px] leading-relaxed whitespace-pre-line text-slate-700">
+                {{ selectedRequest.content }}
+              </p>
+            </section>
+
+
+
+            <!-- 聯絡方式（如果有填） -->
+            <div v-if="selectedRequest.contact" class="flex flex-wrap items-center gap-2 text-[13px] text-slate-700">
+              <p class="font-medium text-slate-800 m-0">聯絡方式：</p>
+              <p class="break-words">
+                {{ selectedRequest.contact }}
+              </p>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1">
+              請自行斟酌聯絡與資訊安全，避免提供過多個資。
+            </p>
+          </div>
+
+          <!-- 保險 fallback -->
+          <div v-else class="h-32 flex items-center justify-center text-xs text-slate-400">
+            尚未選取任何求助貼文
+          </div>
+
+          <!-- ✅ 只有自己的貼文才顯示 -->
+          <div v-if="selectedRequest?.isMine"
+            class="mt-8 -mb-6 -mx-6 border-t border-slate-300/40 bg-white/30 backdrop-blur-sm rounded-b-3xl">
+            <button @click="markAsResolved(selectedRequest.id)"
+              class="w-full py-4 text-sm font-medium text-slate-700 tracking-tight active:scale-[0.99] transition-all rounded-b-3xl">
+              標記為已解決
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+
     <!-- 底部 Tab 導航 -->
     <nav
       class="fixed bottom-0 left-0 right-0 z-20 flex justify-center pb-4"
@@ -370,18 +391,20 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
 import { MapPin, Users, Map, Send } from 'lucide-vue-next';
+import { Icon } from '@iconify/vue';
 
 interface HelpRequest {
   id: number;
   title: string;
-  content?: string;
+  content: string;
   location: string;
   contact?: string;
-  urgency?: string;
   timestamp: string;
   distanceKm?: number;
   lat: number;
   lng: number;
+  isMine: boolean; // ✅ 新增：是不是我自己發的
+  isResolved: boolean; // ✅ 新增
 }
 
 interface UserLocation {
@@ -391,15 +414,45 @@ interface UserLocation {
 
 const selectedRequest = ref<HelpRequest | null>(null);
 
-const activeTab = ref (0);
+
+const activeTab = ref(0);
 const formData = reactive({
   title: '',
   content: '',
   location: '',
-  contact: '',
-  urgency: ''
+  contact: ''
 });
-const helpRequests = ref<HelpRequest[]>([]);
+//const helpRequests = ref<HelpRequest[]>([]);
+
+const helpRequests = ref<HelpRequest[]>([
+  {
+    id: 1,
+    title: '（範例）鄰居需要幫忙搬東西',
+    content: '幫忙把幾箱物資搬到一樓電梯口，預計 19:00 前完成即可，謝謝。',
+    location: '台北市信義區光復南路附近',
+    contact: 'line：neighbor-help',
+    timestamp: new Date().toLocaleString('zh-TW'),
+    lat: 25.033,
+    lng: 121.5654,
+    isMine: false, // ✅ 這筆是「別人發的」，等等會變成黃底
+    isResolved: false // ✅ 新增
+  },
+
+
+  {
+    id: 2,
+    title: '（範例）鄰居需要幫忙搬東西',
+    content: '幫忙把幾箱物資搬到一樓電梯口，預計 19:00 前完成即可，謝謝。',
+    location: '台北市信義區光復南路附近',
+    contact: 'line：neighbor-help',
+    timestamp: new Date().toLocaleString('zh-TW'),
+    lat: 26.033,
+    lng: 123.5654,
+    isMine: false, // ✅ 這筆是「別人發的」，等等會變成黃底
+    isResolved: false // ✅ 新增
+  }
+]);
+
 const showNearby = ref(false);
 const userLocation = ref<UserLocation | null>(null);
 const toastMessage = ref<string | null>(null);
@@ -507,7 +560,7 @@ const calculateDistance = (
 
 // 發布求助
 const handleSubmit = () => {
-  if (!formData.title || !formData.location) {
+  if (!formData.title || !formData.content || !formData.location) {
     showToast('請填寫所有必填欄位');
     return;
   }
@@ -522,11 +575,11 @@ const handleSubmit = () => {
     title: formData.title.trim(),
     content: formData.content.trim(),
     location: formData.location.trim(),
-    urgency: formData.urgency,
     contact: formData.contact.trim() || undefined,
     timestamp: new Date().toLocaleString('zh-TW'),
     lat,
     lng
+    , isMine: true // ✅ 自己送出的永遠標記為「我發的」
   };
 
   helpRequests.value = [newRequest, ...helpRequests.value];
@@ -535,10 +588,16 @@ const handleSubmit = () => {
   formData.content = '';
   formData.location = '';
   formData.contact = '';
-  formData.urgency = '';
 
   showToast('求助資訊已發布');
   activeTab.value = 1;
+
+  // ✅ 標記為已解決 → 移除該筆貼文
+  const markAsResolved = (id: number) => {
+    helpRequests.value = helpRequests.value.filter(req => req.id !== id);
+    closeRequest();
+    showToast('貼文已標記為已解決');
+  };
 };
 
 // 切換附近 5 公里
@@ -546,10 +605,28 @@ const toggleNearby = () => {
   showNearby.value = !showNearby.value;
 };
 
+
 // 過濾顯示的求助資訊
+// const filteredRequests = computed(() => {
+//   if (showNearby.value && userLocation.value) {
+//     return helpRequests.value.filter((req) => {
+//       const distance = calculateDistance(
+//         userLocation.value!.lat,
+//         userLocation.value!.lng,
+//         req.lat,
+//         req.lng
+//       );
+//       return distance <= 5;
+//     });
+//   }
+//   return helpRequests.value;
+// });
+
 const filteredRequests = computed(() => {
+  let list = helpRequests.value.filter(req => !req.isResolved);
+
   if (showNearby.value && userLocation.value) {
-    return helpRequests.value.filter((req) => {
+    list = list.filter((req) => {
       const distance = calculateDistance(
         userLocation.value!.lat,
         userLocation.value!.lng,
@@ -559,8 +636,38 @@ const filteredRequests = computed(() => {
       return distance <= 5;
     });
   }
-  return helpRequests.value;
+
+  // ✅ 自己發的先顯示在上面，其次再照 id（時間）排序
+  return [...list].sort((a, b) => {
+    if (a.isMine === b.isMine) {
+      return b.id - a.id; // 新的在上面
+    }
+    return a.isMine ? -1 : 1; // true 在前面
+  });
 });
+
+
+
+const markAsResolved = (id: number) => {
+  const target = helpRequests.value.find(req => req.id === id);
+  if (target) {
+    target.isResolved = true; // ✅ 標記為已解決，會觸發 transition-group 的離場動畫
+  }
+  closeRequest();
+  showToast('貼文已標記為已解決');
+};
+
+// 點擊貼文開啟彈窗
+const openRequest = (req: HelpRequest) => {
+  selectedRequest.value = req;
+  isModalOpen.value = true;
+};
+
+// 關閉彈窗
+const closeRequest = () => {
+  isModalOpen.value = false;
+  selectedRequest.value = null;
+};
 
 </script>
 
@@ -575,5 +682,17 @@ const filteredRequests = computed(() => {
 .fade-up-leave-to {
   opacity: 0;
   transform: translate(-50%, 8px);
+}
+
+/* 卡片列表淡入淡出 */
+.card-fade-enter-active,
+.card-fade-leave-active {
+  transition: all 0.25s ease;
+}
+
+.card-fade-enter-from,
+.card-fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
 }
 </style>
