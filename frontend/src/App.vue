@@ -388,12 +388,13 @@
 
                   <button
                     v-if="selectedRequest.lat && selectedRequest.lng"
-                    @click="openGoogleMap(selectedRequest.lat, selectedRequest.lng)"
+                    @click="openMapModal(selectedRequest.lat, selectedRequest.lng)"
                     class="flex-1 py-4 text-sm font-medium text-[#356C77] tracking-tight 
                           active:scale-[0.99] transition-all rounded-br-3xl"
                   >
-                    進入 Google Map
+                    查看地圖
                   </button>
+
                 </div>
               </div>
             </div>
@@ -409,6 +410,43 @@
         </div>
       </transition>
 
+      <!-- Google Map 彈窗 -->
+      <transition name="fade-up">
+        <div
+          v-if="isMapModalOpen && mapEmbedUrl"
+          class="fixed inset-0 z-[2100] flex items-center justify-center bg-slate-900/50"
+          @click.self="closeMapModal"
+        >
+          <div
+            class="bg-white rounded-3xl shadow-xl w-[92vw] max-w-md h-[60vh] max-h-[520px] relative overflow-hidden border border-slate-200"
+          >
+            <!-- 關閉 -->
+            <button
+              class="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/90 shadow hover:bg-slate-50 transition"
+              @click="closeMapModal"
+            >
+              <Icon icon="mdi:close" class="w-4 h-4 text-slate-500" />
+            </button>
+
+            <!-- 標題 -->
+            <div class="px-4 pt-4 pb-2 text-xs font-semibold text-slate-700 flex items-center gap-2">
+              <Icon icon="fluent:location-20-filled" class="size-4 text-[#356C77]" />
+              求助地點地圖預覽
+            </div>
+
+            <!-- Map iframe -->
+            <div class="px-3 pb-4 h-[calc(100%-44px)]">
+              <iframe
+                :src="mapEmbedUrl"
+                class="w-full h-full rounded-2xl border-0"
+          style="pointer-events:auto"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+</transition>
 
 
       <!-- 底部 Tab 導航 -->
@@ -443,6 +481,10 @@ import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { MapPin, Users, Map, Send } from 'lucide-vue-next';
 import { Icon } from '@iconify/vue';
 import MapPage from './pages/MapPage.vue';
+
+import keyData from '../key.json';
+
+const apiKey = keyData.map_api_key;
 
 // ==================== API 配置 ====================
 const API_BASE_URL = 'https://flask-demo-188795468423.asia-east1.run.app/api';
@@ -777,11 +819,38 @@ const helpRequest = async (postId: number) => {
     isHelping.value = false;
   }
 };
+const isMapModalOpen = ref(false);
+const mapEmbedUrl = ref<string | null>(null);
 
-const openGoogleMap = (lat: number, lng: number) => {
-  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-  window.open(url, "_blank");
+
+const openMapModal = (lat: number, lng: number) => {
+  const apiKey = keyData.map_api_key;
+
+  if (userLocation.value) {
+    const origin = `${userLocation.value.lat},${userLocation.value.lng}`;
+    const destination = `${lat},${lng}`;
+
+    mapEmbedUrl.value =
+      `https://www.google.com/maps/embed/v1/directions` +
+      `?key=${apiKey}` +
+      `&origin=${encodeURIComponent(origin)}` +
+      `&destination=${encodeURIComponent(destination)}` +
+      `&mode=walking&zoom=15`;
+  } else {
+    // 沒有 userLocation 時退回「地點預覽」避免再噴 Missing origin
+    mapEmbedUrl.value =
+      `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${lat},${lng}&zoom=16`;
+  }
+
+  isMapModalOpen.value = true;
 };
+
+
+const closeMapModal = () => {
+  isMapModalOpen.value = false;
+  mapEmbedUrl.value = null;
+};
+
 
 // ==================== 狀態管理 ====================
 const selectedRequest = ref<HelpRequest | null>(null);
@@ -1006,24 +1075,29 @@ const filteredRequests = computed(() => {
     );
   }
 
-  // 排序：距離 → urgency(1 最優先) → 時間(新到舊)
+  // 排序：自己的貼文優先 → 距離 → 緊急程度(1 最前) → 時間(新到舊)
   return [...list].sort((a, b) => {
-    // 距離（用 calculateDistance 算；缺少資訊的排最後）
+    // 自己的貼文放前面
+    if (a.isMine && !b.isMine) return -1;
+    if (!a.isMine && b.isMine) return 1;
+
+    // 距離（沒座標/沒 userLocation 的排後面）
     const distA = getDistanceScore(a);
     const distB = getDistanceScore(b);
     if (distA !== distB) return distA - distB;
 
-    // 緊急程度（數字小優先：1 → 2 → 3）
+    // 緊急程度（1 → 2 → 3）
     const urgA = a.urgency ?? Number.POSITIVE_INFINITY;
     const urgB = b.urgency ?? Number.POSITIVE_INFINITY;
     if (urgA !== urgB) return urgA - urgB;
 
-    // 時間（新到舊；timestamp 是 toLocaleString 後的字串，所以這邊用 Date parse）
+    // 時間（新到舊）
     const timeA = new Date(a.timestamp).getTime();
     const timeB = new Date(b.timestamp).getTime();
     return timeB - timeA;
   });
 });
+
 
 
 
