@@ -535,11 +535,9 @@ const fetchPosts = async () => {
       user_id: String(CURRENT_USER_ID)
     });
 
-
     if (userLocation.value) {
       params.append('location', `${userLocation.value.lat},${userLocation.value.lng}`);
     }
-
 
     if (showNearby.value) {
       params.append('distance', '1');
@@ -548,28 +546,44 @@ const fetchPosts = async () => {
     const response = await fetch(`${API_BASE_URL}/posts?${params}`);
     const data = await response.json();
 
-
     if (data.success) {
       const results: HelpRequest[] = [];
 
       for (const post of data.posts) {
         let lat = post.latitude;
         let lng = post.longitude;
+        let locationText = post.locationText;
+        let location = post.location;
 
-        // 保險：如果後端只存了 "lat,lng" 在 location，就自己拆
-        if ((lat == null || lng == null) && typeof post.location === 'string') {
-          const [la, lo] = post.location.split(',').map((s: string) => Number(s.trim()));
+        // ✅ 檢查 locationText 是否是經緯度格式（例如 "25.034,121.564"）
+        const coordMatch = typeof locationText === 'string' && locationText.match(/^[-+]?\d+(\.\d+)?\s*,\s*[-+]?\d+(\.\d+)?$/);
+        if (coordMatch) {
+          const [la, lo] = locationText.split(',').map((s: string) => Number(s.trim()));
+          if (Number.isFinite(la) && Number.isFinite(lo)) {
+            lat = la;
+            lng = lo;
+            location = `${la},${lo}`;
+            try {
+              locationText = await fetchAddress(la, lo);
+            } catch (err) {
+              console.warn('地理反查失敗，保留原經緯度字串', err);
+            }
+          }
+        }
+
+        // 保險：如果後端只存 "lat,lng" 在 location，就自己拆
+        if ((lat == null || lng == null) && typeof location === 'string') {
+          const [la, lo] = location.split(',').map((s: string) => Number(s.trim()));
           if (Number.isFinite(la) && Number.isFinite(lo)) {
             lat = la;
             lng = lo;
           }
         }
 
-        if(!post.locationText){
-          // 預設顯示的地點文字（先用後端給的）
-          let addressText: string = post.location;
+        // 若沒有 locationText，就嘗試反查地址
+        if (!locationText) {
+          let addressText: string = location;
 
-          // 有經緯度就反查一次（失敗就維持原本 location）
           if (lat != null && lng != null) {
             try {
               addressText = await fetchAddress(lat, lng);
@@ -577,48 +591,30 @@ const fetchPosts = async () => {
               console.warn('貼文地址轉換失敗，使用原始 location：', err);
             }
           }
-          results.push({
-            id: post.id,
-            title: post.title,
-            content: post.content,
-            location: post.location,
-            locationText: addressText,
-            contact: post.contact,
-            urgency: post.urgency,
-            timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
-            latitude: lat,
-            longitude: lng,
-            lat,
-            lng,
-            isMine: post.user_id === CURRENT_USER_ID,
-            resolved: post.resolved,
-            distance: post.distance,
-            distance_text: post.distance_text,
-            helper_count: post.helper_count || 0,
-            labels: post.labels || []
-          });
-        }else{
-          results.push({
-            id: post.id,
-            title: post.title,
-            content: post.content,
-            location: post.location,
-            locationText: post.locationText,
-            contact: post.contact,
-            urgency: post.urgency,
-            timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
-            latitude: lat,
-            longitude: lng,
-            lat,
-            lng,
-            isMine: post.user_id === CURRENT_USER_ID,
-            resolved: post.resolved,
-            distance: post.distance,
-            distance_text: post.distance_text,
-            helper_count: post.helper_count || 0,
-            labels: post.labels || []
-          });
+
+          locationText = addressText;
         }
+
+        results.push({
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          location,
+          locationText,
+          contact: post.contact,
+          urgency: post.urgency,
+          timestamp: new Date(post.created_at).toLocaleString('zh-TW'),
+          latitude: lat,
+          longitude: lng,
+          lat,
+          lng,
+          isMine: post.user_id === CURRENT_USER_ID,
+          resolved: post.resolved,
+          distance: post.distance,
+          distance_text: post.distance_text,
+          helper_count: post.helper_count || 0,
+          labels: post.labels || []
+        });
       }
 
       helpRequests.value = results;
@@ -630,6 +626,7 @@ const fetchPosts = async () => {
     isLoading.value = false;
   }
 };
+
 
 const createPost = async () => {
   try {
@@ -1015,7 +1012,7 @@ const calculateDistance = (
 
 // 發布求助
 const handleSubmit = async () => {
-  if (!formData.title || (!formData.locationText) ) {
+  if (!formData.title || !formData.locationText ) {
     showToast('請填寫所有必填欄位');
     return;
   }
